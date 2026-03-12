@@ -1,5 +1,17 @@
 [versions]
+rewrite-recipe-bom = "3.26.1"
+
+# Plugins
+lombok = "9.2.0"
+spotless = "8.3.0"
+maven-publish = "0.36.0"
 
 [libraries]
+maven-publish = { module =  "com.vanniktech:gradle-maven-publish-plugin", version.ref = "maven-publish" }
+
+rewrite-recipe-bom = { module = "org.openrewrite.recipe:rewrite-recipe-bom", version.ref = "rewrite-recipe-bom" }
 
 [plugins]
+lombok = { id = "io.freefair.lombok", version.ref = "lombok" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }
