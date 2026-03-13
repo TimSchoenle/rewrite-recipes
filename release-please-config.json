@@ -12,7 +12,7 @@
             "component": "catalog",
             "pull-request-title-pattern": "chore: release catalog v${version}",
             "extra-files": [
-                "catalog/build.gradle.kts"
+                "build.gradle.kts"
             ]
         }
     },
