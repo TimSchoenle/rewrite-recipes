@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/TimSchoenle/rewrite-recipes/compare/v0.1.1...v0.1.2) (2026-03-13)
+
+
+### Bug Fixes
+
+* release please maven central publish action ([e7ea955](https://github.com/TimSchoenle/rewrite-recipes/commit/e7ea955f641134100e6b990b064c0c366af46a1e))
+
 ## [0.1.1](https://github.com/TimSchoenle/rewrite-recipes/compare/v0.1.0...v0.1.1) (2026-03-13)
 
 
