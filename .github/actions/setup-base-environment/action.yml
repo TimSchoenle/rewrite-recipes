@@ -1,0 +1,11 @@
+name: "Setup Java and Gradle Environment"
+description: "Setup Java and Gradle environment for building"
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up JDK
+      uses: TimSchoenle/actions/actions/java-gradle/setup-base-environment@829bd1fb0b22243148114800e78f5506cb0a56cf # actions-java-gradle-setup-base-environment-v1.2.1
+      with:
+        java_version: "21"
+
