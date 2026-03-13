@@ -8,12 +8,10 @@ plugins {
 }
 
 mavenPublishing {
-    configure(JavaLibrary(javadocJar = JavadocJar.Javadoc()))
-
     pom {
-        name.set("Jextract Gradle Plugin")
-        description.set("A Gradle plugin that automates the download and execution of jextract to generate Java Foreign Function & Memory (FFM) API bindings from C header files with bundled library loading support.")
-        url.set("https://github.com/TimSchoenle/gradle-jextract")
+        name.set("Rewrite Recipes & Catalog")
+        description.set("A collection of Rewrite recipes and catalogs.")
+        url.set("https://github.com/TimSchoenle/rewrite-recipes")
         inceptionYear.set("2026")
 
         licenses {
@@ -31,7 +29,7 @@ mavenPublishing {
             }
         }
         scm {
-            url.set("https://github.com/TimSchoenle/gradle-jextract")
+            url.set("https://github.com/TimSchoenle/rewrite-recipes")
         }
     }
 
