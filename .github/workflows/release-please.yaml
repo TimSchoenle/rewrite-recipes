@@ -17,8 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: publish
     outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
+      catalog_release_created: ${{ steps.release.outputs['catalog--release_created'] }}
     permissions:
       contents: write # to create release tags/commits
       issues: write # to comment on release issues
@@ -45,7 +44,7 @@ jobs:
   publish-catalog-to-maven-central:
     name: Publish Catalog to Maven Central
     needs: release-please
-    if: ${{ needs.release-please.outputs.catalog--release_created }}
+    if: ${{ needs.release-please.outputs.catalog_release_created }}
     runs-on: ubuntu-latest
     environment: publish
     permissions:
