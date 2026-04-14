@@ -1,0 +1,35 @@
+type: specs.openrewrite.org/v1beta/recipe
+name: de.timscho.rewrite.minecraft.invui.v1-to-v2
+displayName: Minecraft InvUI v1 to v2
+description: Migrates the InvUI v1 to v2.
+recipeList:
+  - org.openrewrite.gradle.UpgradeDependencyVersion:
+      groupId: xyz.xenondevs.invui
+      artifactId: invui
+      newVersion: 2.0.0-RC.1
+  # Handle Gradle version catalogs (gradle/libs.versions.toml) when invui is managed via version.ref.
+  - org.openrewrite.toml.ChangeValue:
+      keyPath: versions.invui
+      newValue: '"2.0.0-RC.1"'
+  # Common alternative naming style for version keys.
+  - org.openrewrite.toml.ChangeValue:
+      keyPath: versions.xenondevs-invui
+      newValue: '"2.0.0-RC.1"'
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.invui.item.impl.AbstractItem
+      newFullyQualifiedTypeName: xyz.xenondevs.invui.item.AbstractItem
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.invui.gui.structure.Markers
+      newFullyQualifiedTypeName: xyz.xenondevs.invui.gui.Markers
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.invui.gui.structure.Structure
+      newFullyQualifiedTypeName: xyz.xenondevs.invui.gui.Structure
+  - de.timscho.rewrite.minecraft.invui.RemoveAdventureComponentWrapper
+  - de.timscho.rewrite.minecraft.invui.RemoveSimpleItemWrapper
+  - de.timscho.rewrite.minecraft.invui.MigrateStatelessItemProviderToItemWrapper
+  - de.timscho.rewrite.minecraft.invui.MigrateSimpleItemToItem
+  - de.timscho.rewrite.minecraft.invui.MigrateControlItemToAbstractBoundItem
+  - de.timscho.rewrite.minecraft.invui.MigrateWindowToNewApi
+  - de.timscho.rewrite.minecraft.invui.MigratePagedGuiToNewApi
+  - de.timscho.rewrite.minecraft.invui.MigrateItemHandleClickToClickApi
+  - de.timscho.rewrite.minecraft.invui.MigrateClickGettersToRecordAccessors

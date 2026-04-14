@@ -14,6 +14,13 @@
             "extra-files": [
                 "build.gradle.kts"
             ]
+        },
+        "recipes/minecraft/invui": {
+            "component": "recipes-minecraft-invui",
+            "pull-request-title-pattern": "chore: release recipes-minecraft-invui v${version}",
+            "extra-files": [
+                "build.gradle.kts"
+            ]
         }
     },
 
