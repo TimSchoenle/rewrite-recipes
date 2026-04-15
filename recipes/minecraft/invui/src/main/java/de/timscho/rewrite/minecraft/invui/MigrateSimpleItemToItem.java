@@ -33,7 +33,10 @@ public class MigrateSimpleItemToItem extends Recipe {
             @Override
             public @NonNull J visitNewClass(final J.@NonNull NewClass newClass, final @NonNull ExecutionContext ctx) {
                 final J nc = super.visitNewClass(newClass, ctx);
-                if (!(nc instanceof final J.NewClass n) || n.getClazz() == null || n.getArguments().size() != 2) {
+                if (!(nc instanceof final J.NewClass n)
+                    || n.getClazz() == null
+                    || n.getArguments().isEmpty()
+                    || n.getArguments().size() > 2) {
                     return nc;
                 }
 
@@ -42,8 +45,8 @@ public class MigrateSimpleItemToItem extends Recipe {
                 }
 
                 final Expression providerOrStack = n.getArguments().get(0);
-                final Expression clickHandler = n.getArguments().get(1);
-                final boolean isNullClickHandler = clickHandler instanceof J.Literal literal && literal.getValue() == null;
+                final Expression clickHandler = n.getArguments().size() == 2 ? n.getArguments().get(1) : null;
+                final boolean isNullClickHandler = clickHandler == null || clickHandler instanceof J.Literal literal && literal.getValue() == null;
                 final boolean isItemStack = TypeUtils.isOfClassType(providerOrStack.getType(), MigrateSimpleItemToItem.ITEM_STACK);
                 final boolean isItemProvider = TypeUtils.isOfClassType(providerOrStack.getType(), MigrateSimpleItemToItem.ITEM_PROVIDER);
 
@@ -54,8 +57,8 @@ public class MigrateSimpleItemToItem extends Recipe {
                 maybeRemoveImport(MigrateSimpleItemToItem.SIMPLE_ITEM);
                 maybeAddImport(MigrateSimpleItemToItem.ITEM);
                 doAfterVisit(new AddImport<>(MigrateSimpleItemToItem.ITEM, null, false));
+                final String providerType = isItemStack ? MigrateSimpleItemToItem.ITEM_STACK : MigrateSimpleItemToItem.ITEM_PROVIDER;
                 if (isNullClickHandler) {
-                    final String providerType = isItemStack ? MigrateSimpleItemToItem.ITEM_STACK : MigrateSimpleItemToItem.ITEM_PROVIDER;
                     return JavaTemplate.builder("Item.simple(#{any(" + providerType + ")})")
                         .imports(MigrateSimpleItemToItem.ITEM)
                         .build()
@@ -63,7 +66,6 @@ public class MigrateSimpleItemToItem extends Recipe {
                         .withPrefix(n.getPrefix());
                 }
 
-                final String providerType = isItemStack ? MigrateSimpleItemToItem.ITEM_STACK : MigrateSimpleItemToItem.ITEM_PROVIDER;
                 return JavaTemplate.builder("Item.builder().setItemProvider(#{any(" + providerType + ")}).addClickHandler(#{any(java.util.function.Consumer)}).build()")
                     .imports(MigrateSimpleItemToItem.ITEM)
                     .build()

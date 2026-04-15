@@ -18,7 +18,7 @@ public class MigrateClickGettersToRecordAccessors extends Recipe {
 
     @Override
     public @NonNull String getDescription() {
-        return "Migrates `Click#getPlayer()`, `Click#getClick()`, and `Click#getHotbarButton()` to record-style accessors.";
+        return "Migrates `Click` getter methods (`getPlayer`, `getClick`, `getClickType`, and `getHotbarButton`) to record-style accessors.";
     }
 
     @Override
@@ -34,6 +34,12 @@ public class MigrateClickGettersToRecordAccessors extends Recipe {
                 ).getVisitor());
                 this.doAfterVisit(new ChangeMethodName(
                     MigrateClickGettersToRecordAccessors.CLICK + " getClick()",
+                    "clickType",
+                    null,
+                    null
+                ).getVisitor());
+                this.doAfterVisit(new ChangeMethodName(
+                    MigrateClickGettersToRecordAccessors.CLICK + " getClickType()",
                     "clickType",
                     null,
                     null

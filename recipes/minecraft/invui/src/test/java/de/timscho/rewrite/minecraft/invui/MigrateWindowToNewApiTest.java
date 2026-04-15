@@ -163,6 +163,8 @@ class MigrateWindowToNewApiTest implements RewriteTest {
                     static Builder.Normal.Single single() { return null; }
                     static Window single(java.util.function.Consumer<Builder.Normal.Single> consumer) { return null; }
                     static Builder.Normal.Split builder() { return null; }
+                    static Builder.Normal.Merged merged() { return null; }
+                    static Builder.Normal.Merged mergedBuilder() { return null; }
 
                     interface Builder<W extends Window, S extends Builder<W, S>> {
                         S setGui(Object gui);
@@ -171,6 +173,7 @@ class MigrateWindowToNewApiTest implements RewriteTest {
                         interface Normal<V, S extends Normal<V, S>> extends Builder<Window, S> {
                             interface Single extends Normal<java.util.UUID, Single>, Builder.Single<Window, Single> {}
                             interface Split extends Normal<org.bukkit.entity.Player, Split> {}
+                            interface Merged extends Normal<org.bukkit.entity.Player, Merged>, Builder.Single<Window, Merged> {}
                         }
                     }
                 }
@@ -186,6 +189,7 @@ class MigrateWindowToNewApiTest implements RewriteTest {
                     void use() {
                         Window.single();
                         Window.builder().setGui(new Object());
+                        Window.merged().setGui(new Object());
                         Window.single(builder -> {
                         });
                     }
@@ -200,7 +204,8 @@ class MigrateWindowToNewApiTest implements RewriteTest {
                     void use() {
                         Window.builder();
                         Window.builder().setUpperGui(new Object());
-                        Window.single(builder -> {
+                        Window.mergedBuilder().setGui(new Object());
+                        /*~~(Window factory Consumer overloads were removed in v2; migrate to builder()/mergedBuilder() + build() manually.)~~>*/Window.single(builder -> {
                         });
                     }
                 }
@@ -234,6 +239,83 @@ class MigrateWindowToNewApiTest implements RewriteTest {
 
                 class UnrelatedUsage {
                     void handle(InventoryClickEvent event) {
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void migratesAddCloseHandlerRunnableToReasonConsumer() {
+        this.rewriteRun(
+            spec -> spec.expectedCyclesThatMakeChanges(2),
+            java(
+                """
+                package org.bukkit.entity;
+
+                public class Player {}
+                """
+            ),
+            java(
+                """
+                package org.bukkit.event.inventory;
+
+                public class InventoryCloseEvent {
+                    public enum Reason {
+                        UNKNOWN
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.window;
+
+                public interface Window {
+                    static Builder.Normal.Split split() { return null; }
+                    static Builder.Normal.Split builder() { return null; }
+                    void addCloseHandler(Runnable closeHandler);
+
+                    interface Builder<W extends Window, S extends Builder<W, S>> {
+                        S addCloseHandler(Runnable closeHandler);
+                        interface Normal<V, S extends Normal<V, S>> extends Builder<Window, S> {
+                            interface Split extends Normal<org.bukkit.entity.Player, Split> {}
+                        }
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import xyz.xenondevs.invui.window.Window;
+
+                class UsesWindow {
+                    void onClosed() {
+                    }
+
+                    void use(Window window, Runnable closeHandler) {
+                        window.addCloseHandler(closeHandler);
+                        window.addCloseHandler(this::onClosed);
+                        Window.split().addCloseHandler(closeHandler);
+                    }
+                }
+                """,
+                """
+                package test;
+
+                import xyz.xenondevs.invui.window.Window;
+
+                class UsesWindow {
+                    void onClosed() {
+                    }
+
+                    void use(Window window, Runnable closeHandler) {
+                        window.addCloseHandler(__reason -> ((java.lang.Runnable) closeHandler).run());
+                        window.addCloseHandler(__reason -> ((java.lang.Runnable) this::onClosed).run());
+                        Window.builder().addCloseHandler(__reason -> ((java.lang.Runnable) closeHandler).run());
                     }
                 }
                 """

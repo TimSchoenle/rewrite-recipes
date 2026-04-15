@@ -36,7 +36,11 @@ class MigrateItemHandleClickToClickApiTest implements RewriteTest {
                 """
                 package org.bukkit.event.inventory;
 
-                public class InventoryClickEvent {}
+                public class InventoryClickEvent {
+                    public int getHotbarButton() {
+                        return -1;
+                    }
+                }
                 """
             ),
             java(
@@ -120,12 +124,12 @@ class MigrateItemHandleClickToClickApiTest implements RewriteTest {
 
                 import org.bukkit.entity.Player;
                 import org.bukkit.event.inventory.ClickType;
-                import xyz.xenondevs.invui.Click;
+                import org.bukkit.event.inventory.InventoryClickEvent;
                 import xyz.xenondevs.invui.item.Item;
 
                 class UsesItem {
-                    void call(Item item, ClickType clickType, Player player, Click event) {
-                        item.handleClick(clickType, player, event);
+                    void call(Item item, ClickType clickType, Player player, InventoryClickEvent event) {
+                        item.handleClick(clickType, player, new xyz.xenondevs.invui.Click(player, clickType, event.getHotbarButton()));
                     }
                 }
                 """

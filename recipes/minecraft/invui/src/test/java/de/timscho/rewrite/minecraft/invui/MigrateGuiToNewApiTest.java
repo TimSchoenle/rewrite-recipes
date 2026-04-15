@@ -79,8 +79,13 @@ class MigrateGuiToNewApiTest implements RewriteTest {
                 class UsesGui {
                     Object use(Gui gui) {
                         Gui.builder();
-                        Gui.normal(builder -> {
-                        });
+                        ((java.util.function.Supplier<xyz.xenondevs.invui.gui.Gui>) () -> {
+                            java.util.function.Consumer<xyz.xenondevs.invui.gui.Gui.Builder<?, ?>> consumer = builder -> {
+                            };
+                            xyz.xenondevs.invui.gui.Gui.Builder<?, ?> builder = xyz.xenondevs.invui.gui.Gui.builder();
+                            consumer.accept(builder);
+                            return builder.build();
+                        }).get();
                         gui.getWindows();
                         return gui.getCurrentViewers();
                     }

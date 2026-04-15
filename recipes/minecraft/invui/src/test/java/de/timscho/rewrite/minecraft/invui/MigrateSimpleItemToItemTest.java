@@ -243,4 +243,130 @@ class MigrateSimpleItemToItemTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void migratesSingleItemProviderConstructorToSimpleFactory() {
+        this.rewriteRun(
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                public interface Item {
+                    static Item simple(ItemProvider provider) {
+                        return null;
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                public interface ItemProvider {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item.impl;
+
+                import xyz.xenondevs.invui.item.ItemProvider;
+
+                public class SimpleItem {
+                    public SimpleItem(ItemProvider itemProvider) {}
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import xyz.xenondevs.invui.item.Item;
+                import xyz.xenondevs.invui.item.ItemProvider;
+                import xyz.xenondevs.invui.item.impl.SimpleItem;
+
+                class UsesSimpleItem {
+                    Object build(ItemProvider provider) {
+                        return new SimpleItem(provider);
+                    }
+                }
+                """,
+                """
+                package test;
+
+                import xyz.xenondevs.invui.item.Item;
+                import xyz.xenondevs.invui.item.ItemProvider;
+
+                class UsesSimpleItem {
+                    Object build(ItemProvider provider) {
+                        return Item.simple(provider);
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void migratesSingleItemStackConstructorToSimpleFactory() {
+        this.rewriteRun(
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                import org.bukkit.inventory.ItemStack;
+
+                public interface Item {
+                    static Item simple(ItemStack stack) {
+                        return null;
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item.impl;
+
+                import org.bukkit.inventory.ItemStack;
+
+                public class SimpleItem {
+                    public SimpleItem(ItemStack itemStack) {}
+                }
+                """
+            ),
+            java(
+                """
+                package org.bukkit.inventory;
+
+                public class ItemStack {}
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import org.bukkit.inventory.ItemStack;
+                import xyz.xenondevs.invui.item.Item;
+                import xyz.xenondevs.invui.item.impl.SimpleItem;
+
+                class UsesSimpleItem {
+                    Object build(ItemStack stack) {
+                        return new SimpleItem(stack);
+                    }
+                }
+                """,
+                """
+                package test;
+
+                import org.bukkit.inventory.ItemStack;
+                import xyz.xenondevs.invui.item.Item;
+
+                class UsesSimpleItem {
+                    Object build(ItemStack stack) {
+                        return Item.simple(stack);
+                    }
+                }
+                """
+            )
+        );
+    }
 }

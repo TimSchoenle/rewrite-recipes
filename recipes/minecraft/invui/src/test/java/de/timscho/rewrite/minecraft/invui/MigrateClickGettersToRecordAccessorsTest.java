@@ -90,6 +90,80 @@ class MigrateClickGettersToRecordAccessorsTest implements RewriteTest {
     }
 
     @Test
+    void migratesClickTypeGetterVariant() {
+        this.rewriteRun(
+            java(
+                """
+                package org.bukkit.entity;
+
+                public class Player {}
+                """
+            ),
+            java(
+                """
+                package org.bukkit.event.inventory;
+
+                public class ClickType {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui;
+
+                import org.bukkit.entity.Player;
+                import org.bukkit.event.inventory.ClickType;
+
+                public class Click {
+                    public Player getPlayer() { return null; }
+                    public ClickType getClickType() { return null; }
+                    public int getHotbarButton() { return -1; }
+                }
+                """,
+                """
+                package xyz.xenondevs.invui;
+
+                import org.bukkit.entity.Player;
+                import org.bukkit.event.inventory.ClickType;
+
+                public class Click {
+                    public Player player() { return null; }
+                    public ClickType clickType() { return null; }
+                    public int hotbarButton() { return -1; }
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import xyz.xenondevs.invui.Click;
+
+                class UsesClick {
+                    Object use(Click click) {
+                        Object player = click.getPlayer();
+                        Object clickType = click.getClickType();
+                        return click.getHotbarButton();
+                    }
+                }
+                """,
+                """
+                package test;
+
+                import xyz.xenondevs.invui.Click;
+
+                class UsesClick {
+                    Object use(Click click) {
+                        Object player = click.player();
+                        Object clickType = click.clickType();
+                        return click.hotbarButton();
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
     void doesNotMigrateUnrelatedGetterNames() {
         this.rewriteRun(
             java(

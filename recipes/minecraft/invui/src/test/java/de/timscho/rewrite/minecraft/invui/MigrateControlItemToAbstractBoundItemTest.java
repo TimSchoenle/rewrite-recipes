@@ -19,6 +19,14 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
     @Test
     void migratesTypeUsageAndSetGuiCall() {
         this.rewriteRun(
+            spec -> spec.expectedCyclesThatMakeChanges(2),
+            java(
+                """
+                package org.bukkit.entity;
+
+                public class Player {}
+                """
+            ),
             java(
                 """
                 package xyz.xenondevs.invui.gui;
@@ -38,6 +46,7 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
                 package xyz.xenondevs.invui.item;
 
                 public abstract class AbstractBoundItem {
+                    public abstract ItemProvider getItemProvider(org.bukkit.entity.Player viewer);
                     public void bind(xyz.xenondevs.invui.gui.Gui gui) {}
                 }
                 """
@@ -65,6 +74,7 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
                 class UsesControlItem {
                     void bindIt(ControlItem<Gui> item, Gui gui) {
                         item.setGui(gui);
+                        item.getItemProvider(gui);
                     }
                 }
                 """,
@@ -77,6 +87,7 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
                 class UsesControlItem {
                     void bindIt(AbstractBoundItem item, Gui gui) {
                         item.bind(gui);
+                        item.getItemProvider(((org.bukkit.entity.Player) null));
                     }
                 }
                 """
@@ -108,6 +119,7 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
                 import xyz.xenondevs.invui.gui.Gui;
 
                 public abstract class AbstractBoundItem {
+                    public abstract xyz.xenondevs.invui.item.ItemProvider getItemProvider(org.bukkit.entity.Player viewer);
                     public Gui getGui() {
                         return null;
                     }
@@ -154,13 +166,13 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
                 class CustomGui implements xyz.xenondevs.invui.gui.Gui {}
 
                 class MyControlItem extends AbstractBoundItem {
-                    @Override
+
                     public ItemProvider getItemProvider(CustomGui gui) {
                         return null;
                     }
 
                     @Override
-                    public xyz.xenondevs.invui.item.ItemProvider getItemProvider() {
+                    public xyz.xenondevs.invui.item.ItemProvider getItemProvider(org.bukkit.entity.Player viewer) {
                         return getItemProvider((test.CustomGui) getGui());
                     }
 
@@ -169,7 +181,10 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
                         return (test.CustomGui) super.getGui();
                     }
                 }
-                """
+                """.replace(
+                    "\n\n    public ItemProvider getItemProvider(CustomGui gui)",
+                    "\n\n    \n    public ItemProvider getItemProvider(CustomGui gui)"
+                )
             )
         );
     }
@@ -177,6 +192,13 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
     @Test
     void migratesDeepHierarchyAndSetGuiOverrides() {
         this.rewriteRun(
+            java(
+                """
+                package org.bukkit.entity;
+
+                public class Player {}
+                """
+            ),
             java(
                 """
                 package xyz.xenondevs.invui.gui;
@@ -198,7 +220,7 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
                 import xyz.xenondevs.invui.gui.Gui;
 
                 public abstract class AbstractBoundItem {
-                    public abstract ItemProvider getItemProvider();
+                    public abstract ItemProvider getItemProvider(org.bukkit.entity.Player viewer);
                     public Gui getGui() {
                         return null;
                     }
@@ -261,7 +283,7 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
                 class CustomGui implements Gui {}
 
                 abstract class BaseControlItem extends AbstractBoundItem {
-                    @Override
+
                     public ItemProvider getItemProvider(CustomGui gui) {
                         return null;
                     }
@@ -272,7 +294,7 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
                     }
 
                     @Override
-                    public xyz.xenondevs.invui.item.ItemProvider getItemProvider() {
+                    public xyz.xenondevs.invui.item.ItemProvider getItemProvider(org.bukkit.entity.Player viewer) {
                         return getItemProvider((test.CustomGui) getGui());
                     }
 
@@ -288,7 +310,10 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
                         super.bind(gui);
                     }
                 }
-                """
+                """.replace(
+                    "\n\n    public ItemProvider getItemProvider(CustomGui gui)",
+                    "\n\n    \n    public ItemProvider getItemProvider(CustomGui gui)"
+                )
             )
         );
     }
@@ -296,6 +321,13 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
     @Test
     void removesGenericArgumentsFromIndirectControlItemSubclasses() {
         this.rewriteRun(
+            java(
+                """
+                package org.bukkit.entity;
+
+                public class Player {}
+                """
+            ),
             java(
                 """
                 package xyz.xenondevs.invui.gui;
@@ -317,7 +349,7 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
                 import xyz.xenondevs.invui.gui.Gui;
 
                 public abstract class AbstractBoundItem {
-                    public abstract ItemProvider getItemProvider();
+                    public abstract ItemProvider getItemProvider(org.bukkit.entity.Player viewer);
                     public Gui getGui() {
                         return null;
                     }
@@ -366,13 +398,13 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
                 class CustomGui implements Gui {}
 
                 abstract class BaseControlItem extends AbstractBoundItem {
-                    @Override
+
                     public ItemProvider getItemProvider(CustomGui gui) {
                         return null;
                     }
 
                     @Override
-                    public xyz.xenondevs.invui.item.ItemProvider getItemProvider() {
+                    public xyz.xenondevs.invui.item.ItemProvider getItemProvider(org.bukkit.entity.Player viewer) {
                         return getItemProvider((test.CustomGui) getGui());
                     }
 
@@ -383,6 +415,211 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
                 }
 
                 abstract class BaseGuildModuleItem extends BaseControlItem {
+                }
+                """.replace(
+                    "\n\n    public ItemProvider getItemProvider(CustomGui gui)",
+                    "\n\n    \n    public ItemProvider getItemProvider(CustomGui gui)"
+                )
+            )
+        );
+    }
+
+    @Test
+    void keepsGenericArgumentsOnIndirectSubclassesWithOwnTypeParameters() {
+        this.rewriteRun(
+            java(
+                """
+                package org.bukkit.entity;
+
+                public class Player {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.gui;
+
+                public interface Gui {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                public interface ItemProvider {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                import xyz.xenondevs.invui.gui.Gui;
+
+                public abstract class AbstractBoundItem {
+                    public abstract ItemProvider getItemProvider(org.bukkit.entity.Player viewer);
+                    public Gui getGui() {
+                        return null;
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item.impl.controlitem;
+
+                import xyz.xenondevs.invui.gui.Gui;
+                import xyz.xenondevs.invui.item.ItemProvider;
+
+                public abstract class ControlItem<G extends Gui> {
+                    public abstract ItemProvider getItemProvider(G gui);
+                    public G getGui() {
+                        return null;
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import xyz.xenondevs.invui.gui.Gui;
+                import xyz.xenondevs.invui.item.ItemProvider;
+                import xyz.xenondevs.invui.item.impl.controlitem.ControlItem;
+
+                class CustomGui implements Gui {}
+
+                abstract class BaseControlItem<T> extends ControlItem<CustomGui> {
+                    public ItemProvider getItemProvider(CustomGui gui) {
+                        return null;
+                    }
+                }
+
+                class ExtendedControlItem extends BaseControlItem<String> {
+                }
+                """,
+                """
+                package test;
+
+                import xyz.xenondevs.invui.gui.Gui;
+                import xyz.xenondevs.invui.item.AbstractBoundItem;
+                import xyz.xenondevs.invui.item.ItemProvider;
+
+                class CustomGui implements Gui {}
+
+                abstract class BaseControlItem<T> extends AbstractBoundItem {
+                    public ItemProvider getItemProvider(CustomGui gui) {
+                        return null;
+                    }
+
+                    @Override
+                    public xyz.xenondevs.invui.item.ItemProvider getItemProvider(org.bukkit.entity.Player viewer) {
+                        return getItemProvider((test.CustomGui) getGui());
+                    }
+
+                    @Override
+                    public test.CustomGui getGui() {
+                        return (test.CustomGui) super.getGui();
+                    }
+                }
+
+                class ExtendedControlItem extends BaseControlItem<String> {
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void removesGuiTypeParametersRecursivelyFromHierarchyClasses() {
+        this.rewriteRun(
+            java(
+                """
+                package org.bukkit.entity;
+
+                public class Player {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.gui;
+
+                public interface Gui {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                public interface ItemProvider {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                import xyz.xenondevs.invui.gui.Gui;
+
+                public abstract class AbstractBoundItem {
+                    public abstract ItemProvider getItemProvider(org.bukkit.entity.Player viewer);
+                    public Gui getGui() {
+                        return null;
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item.impl.controlitem;
+
+                import xyz.xenondevs.invui.gui.Gui;
+                import xyz.xenondevs.invui.item.ItemProvider;
+
+                public abstract class ControlItem<G extends Gui> {
+                    public abstract ItemProvider getItemProvider(G gui);
+                    public G getGui() {
+                        return null;
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import xyz.xenondevs.invui.gui.Gui;
+                import xyz.xenondevs.invui.item.impl.controlitem.ControlItem;
+
+                interface UiContext {}
+
+                class CustomGui implements Gui {}
+                class CustomContext implements UiContext {}
+
+                abstract class BaseControlItem<G extends Gui, C extends UiContext> extends ControlItem<G> {
+                }
+
+                abstract class BaseGuildModuleItem<G extends Gui, C extends UiContext> extends BaseControlItem<G, C> {
+                }
+
+                class ConcreteItem extends BaseGuildModuleItem<CustomGui, CustomContext> {
+                }
+                """,
+                """
+                package test;
+
+                import xyz.xenondevs.invui.gui.Gui;
+                import xyz.xenondevs.invui.item.AbstractBoundItem;
+
+                interface UiContext {}
+
+                class CustomGui implements Gui {}
+                class CustomContext implements UiContext {}
+
+                abstract class BaseControlItem<C extends UiContext> extends AbstractBoundItem {
+                }
+
+                abstract class BaseGuildModuleItem<C extends UiContext> extends BaseControlItem<C> {
+                }
+
+                class ConcreteItem extends BaseGuildModuleItem<CustomContext> {
                 }
                 """
             )

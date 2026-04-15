@@ -12,17 +12,21 @@ import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.TypeUtils;
+import org.openrewrite.marker.SearchResult;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MigrateWindowToNewApi extends Recipe {
     private static final String WINDOW = "xyz.xenondevs.invui.window.Window";
     private static final String WINDOW_BUILDER = MigrateWindowToNewApi.WINDOW + "$Builder";
+    private static final String WINDOW_BUILDER_MERGED = MigrateWindowToNewApi.WINDOW_BUILDER + "$Merged";
+    private static final String WINDOW_BUILDER_NORMAL_MERGED = MigrateWindowToNewApi.WINDOW_BUILDER + "$Normal$Merged";
     private static final String COMPONENT_WRAPPER = "xyz.xenondevs.inventoryaccess.component.ComponentWrapper";
     private static final String ADVENTURE_COMPONENT = "net.kyori.adventure.text.Component";
     private static final String INVENTORY_CLICK_EVENT = "org.bukkit.event.inventory.InventoryClickEvent";
     private static final String CLICK_EVENT = "xyz.xenondevs.invui.ClickEvent";
     private static final String BASE_COMPONENT = "net.md_5.bungee.api.chat.BaseComponent";
+    private static final String RUNNABLE = "java.lang.Runnable";
 
     private static final MethodMatcher WINDOW_FACTORY_SPLIT_NO_ARGS = new MethodMatcher(MigrateWindowToNewApi.WINDOW + " split()");
     private static final MethodMatcher WINDOW_FACTORY_MERGED_NO_ARGS = new MethodMatcher(MigrateWindowToNewApi.WINDOW + " merged()");
@@ -34,6 +38,8 @@ public class MigrateWindowToNewApi extends Recipe {
     private static final MethodMatcher WINDOW_GET_CURRENT_VIEWER = new MethodMatcher(MigrateWindowToNewApi.WINDOW + " getCurrentViewer()");
     private static final MethodMatcher WINDOW_GET_VIEWER_UUID = new MethodMatcher(MigrateWindowToNewApi.WINDOW + " getViewerUUID()");
     private static final MethodMatcher WINDOW_BUILDER_SET_GUI = new MethodMatcher(MigrateWindowToNewApi.WINDOW_BUILDER + " setGui(..)");
+    private static final MethodMatcher WINDOW_ADD_CLOSE_HANDLER = new MethodMatcher(MigrateWindowToNewApi.WINDOW + " addCloseHandler(java.lang.Runnable)");
+    private static final MethodMatcher WINDOW_BUILDER_ADD_CLOSE_HANDLER = new MethodMatcher(MigrateWindowToNewApi.WINDOW_BUILDER + " addCloseHandler(java.lang.Runnable)");
 
     @Override
     public @NonNull String getDisplayName() {
@@ -69,7 +75,10 @@ public class MigrateWindowToNewApi extends Recipe {
                     m = m.withName(m.getName().withSimpleName("builder"));
                 } else if (MigrateWindowToNewApi.WINDOW_FACTORY_SPLIT_WITH_CONSUMER.matches(m) || MigrateWindowToNewApi.WINDOW_FACTORY_MERGED_WITH_CONSUMER.matches(m)
                     || MigrateWindowToNewApi.WINDOW_FACTORY_SINGLE_WITH_CONSUMER.matches(m)) {
-                    return m;
+                    return SearchResult.found(
+                        m,
+                        "Window factory Consumer overloads were removed in v2; migrate to builder()/mergedBuilder() + build() manually."
+                    );
                 } else if (MigrateWindowToNewApi.WINDOW_CHANGE_TITLE.matches(m)) {
                     m = this.migrateChangeTitle(m);
                 } else if (MigrateWindowToNewApi.WINDOW_GET_CURRENT_VIEWER.matches(m)) {
@@ -78,6 +87,8 @@ public class MigrateWindowToNewApi extends Recipe {
                     m = this.convertGetViewerUuid(m);
                 } else if (this.isSetGuiOnWindowBuilderHierarchy(m)) {
                     m = m.withName(m.getName().withSimpleName("setUpperGui"));
+                } else if (this.isAddCloseHandlerWithRunnable(m)) {
+                    m = this.migrateAddCloseHandler(m);
                 }
 
                 return m;
@@ -110,6 +121,17 @@ public class MigrateWindowToNewApi extends Recipe {
                     .withPrefix(method.getPrefix());
             }
 
+            private J.MethodInvocation migrateAddCloseHandler(final J.MethodInvocation method) {
+                if (method.getArguments().size() != 1) {
+                    return method;
+                }
+
+                final Expression closeHandler = method.getArguments().getFirst();
+                return JavaTemplate.builder("__reason -> ((java.lang.Runnable) #{any()}).run()")
+                    .build()
+                    .apply(getCursor(), method.getCoordinates().replaceArguments(), closeHandler);
+            }
+
             private boolean isBaseComponentArray(final JavaType type) {
                 if (!(type instanceof final JavaType.Array arrayType)) {
                     return false;
@@ -119,7 +141,7 @@ public class MigrateWindowToNewApi extends Recipe {
 
             private boolean isSetGuiOnWindowBuilderHierarchy(final J.MethodInvocation method) {
                 if (MigrateWindowToNewApi.WINDOW_BUILDER_SET_GUI.matches(method)) {
-                    return true;
+                    return !this.isMergedBuilderInvocation(method);
                 }
 
                 if (!"setGui".equals(method.getSimpleName()) || method.getArguments().size() != 1) {
@@ -128,11 +150,54 @@ public class MigrateWindowToNewApi extends Recipe {
 
                 final JavaType.Method methodType = method.getMethodType();
                 if (methodType != null) {
-                    return TypeUtils.isAssignableTo(MigrateWindowToNewApi.WINDOW_BUILDER, methodType.getDeclaringType());
+                    return TypeUtils.isAssignableTo(MigrateWindowToNewApi.WINDOW_BUILDER, methodType.getDeclaringType())
+                        && !this.isMergedBuilderType(methodType.getDeclaringType());
                 }
 
                 return method.getSelect() != null &&
-                    TypeUtils.isAssignableTo(MigrateWindowToNewApi.WINDOW_BUILDER, method.getSelect().getType());
+                    TypeUtils.isAssignableTo(MigrateWindowToNewApi.WINDOW_BUILDER, method.getSelect().getType()) &&
+                    !this.isMergedBuilderType(method.getSelect().getType());
+            }
+
+            private boolean isAddCloseHandlerWithRunnable(final J.MethodInvocation method) {
+                if (MigrateWindowToNewApi.WINDOW_ADD_CLOSE_HANDLER.matches(method) || MigrateWindowToNewApi.WINDOW_BUILDER_ADD_CLOSE_HANDLER.matches(method)) {
+                    return true;
+                }
+
+                if (!"addCloseHandler".equals(method.getSimpleName()) || method.getArguments().size() != 1) {
+                    return false;
+                }
+
+                final Expression handlerArg = method.getArguments().getFirst();
+                if (!TypeUtils.isAssignableTo(MigrateWindowToNewApi.RUNNABLE, handlerArg.getType())) {
+                    return false;
+                }
+
+                final JavaType.Method methodType = method.getMethodType();
+                if (methodType != null) {
+                    return TypeUtils.isAssignableTo(MigrateWindowToNewApi.WINDOW, methodType.getDeclaringType()) ||
+                        TypeUtils.isAssignableTo(MigrateWindowToNewApi.WINDOW_BUILDER, methodType.getDeclaringType());
+                }
+
+                return method.getSelect() != null &&
+                    (TypeUtils.isAssignableTo(MigrateWindowToNewApi.WINDOW, method.getSelect().getType()) ||
+                        TypeUtils.isAssignableTo(MigrateWindowToNewApi.WINDOW_BUILDER, method.getSelect().getType()));
+            }
+
+            private boolean isMergedBuilderInvocation(final J.MethodInvocation method) {
+                final JavaType.Method methodType = method.getMethodType();
+                if (methodType != null && this.isMergedBuilderType(methodType.getDeclaringType())) {
+                    return true;
+                }
+
+                return method.getSelect() != null && this.isMergedBuilderType(method.getSelect().getType());
+            }
+
+            private boolean isMergedBuilderType(final JavaType type) {
+                return TypeUtils.isAssignableTo(MigrateWindowToNewApi.WINDOW_BUILDER_MERGED, type)
+                    || TypeUtils.isAssignableTo(MigrateWindowToNewApi.WINDOW_BUILDER_NORMAL_MERGED, type)
+                    || TypeUtils.isOfClassType(type, MigrateWindowToNewApi.WINDOW_BUILDER_MERGED)
+                    || TypeUtils.isOfClassType(type, MigrateWindowToNewApi.WINDOW_BUILDER_NORMAL_MERGED);
             }
 
             private boolean usesWindowMethods(final J.CompilationUnit compilationUnit) {
@@ -159,7 +224,8 @@ public class MigrateWindowToNewApi extends Recipe {
                             || MigrateWindowToNewApi.WINDOW_CHANGE_TITLE.matches(m)
                             || MigrateWindowToNewApi.WINDOW_GET_CURRENT_VIEWER.matches(m)
                             || MigrateWindowToNewApi.WINDOW_GET_VIEWER_UUID.matches(m)
-                            || isSetGuiOnWindowBuilderHierarchy(m)) {
+                            || isSetGuiOnWindowBuilderHierarchy(m)
+                            || isAddCloseHandlerWithRunnable(m)) {
                             found.set(true);
                         }
                         return m;
