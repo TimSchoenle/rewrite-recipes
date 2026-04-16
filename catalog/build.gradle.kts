@@ -15,6 +15,7 @@ dependencies {
     runtimeOnly(platform(libs.rewrite.recipe.bom))
 
     runtimeOnly("org.openrewrite.recipe:rewrite-migrate-java")
+    runtimeOnly(project(":recipes:minecraft:invui"))
 }
 
 mavenPublishing {

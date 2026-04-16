@@ -1,0 +1,306 @@
+type: specs.openrewrite.org/v1beta/recipe
+name: de.timscho.rewrite.minecraft.invui.v1-to-v2
+displayName: Minecraft InvUI v1 to v2
+description: Comprehensive migration from InvUI 1.x APIs to 2.x APIs, including dependency, type, and method migrations plus manual follow-up markers for removed APIs.
+tags:
+  - minecraft
+  - invui
+  - migration
+recipeList:
+  - de.timscho.rewrite.minecraft.invui.v1-to-v2.Dependencies
+  - de.timscho.rewrite.minecraft.invui.v1-to-v2.TypeRelocations
+  - de.timscho.rewrite.minecraft.invui.v1-to-v2.FactoryAndAccessorRenames
+  - de.timscho.rewrite.minecraft.invui.v1-to-v2.CustomVisitors
+  - de.timscho.rewrite.minecraft.invui.v1-to-v2.ManualFollowUps
+  - de.timscho.rewrite.minecraft.invui.v1-to-v2.RemainingSurfaceFollowUps
+  - org.openrewrite.java.RemoveUnusedImports
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: de.timscho.rewrite.minecraft.invui.v1-to-v2.Dependencies
+displayName: Migrate InvUI dependencies to 2.x
+description: Updates Gradle, Maven, and common version-catalog coordinates from InvUI 1.x to 2.x.
+recipeList:
+  - org.openrewrite.gradle.ChangeDependencyArtifactId:
+      groupId: xyz.xenondevs.invui
+      artifactId: invui-core
+      newArtifactId: invui
+  - org.openrewrite.maven.ChangeDependencyGroupIdAndArtifactId:
+      oldGroupId: xyz.xenondevs.invui
+      oldArtifactId: invui-core
+      newGroupId: xyz.xenondevs.invui
+      newArtifactId: invui
+      changeManagedDependency: true
+  - org.openrewrite.gradle.UpgradeDependencyVersion:
+      groupId: xyz.xenondevs.invui
+      artifactId: invui
+      newVersion: 2.x
+  - org.openrewrite.maven.UpgradeDependencyVersion:
+      groupId: xyz.xenondevs.invui
+      artifactId: invui
+      newVersion: 2.x
+  - org.openrewrite.gradle.UpgradeDependencyVersion:
+      groupId: xyz.xenondevs.invui
+      artifactId: invui-core
+      newVersion: 2.x
+  - org.openrewrite.maven.UpgradeDependencyVersion:
+      groupId: xyz.xenondevs.invui
+      artifactId: invui-core
+      newVersion: 2.x
+  - org.openrewrite.toml.ChangeValue:
+      keyPath: versions.invui
+      newValue: '"2.x"'
+  - org.openrewrite.toml.ChangeValue:
+      keyPath: versions.invui-core
+      newValue: '"2.x"'
+  - org.openrewrite.toml.ChangeValue:
+      keyPath: versions.xenondevs-invui
+      newValue: '"2.x"'
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: de.timscho.rewrite.minecraft.invui.v1-to-v2.TypeRelocations
+displayName: Migrate moved InvUI types
+description: Rewrites common type moves between InvUI 1.x and 2.x.
+recipeList:
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.invui.animation.Animation
+      newFullyQualifiedTypeName: xyz.xenondevs.invui.gui.Animation
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.invui.gui.structure.Ingredient
+      newFullyQualifiedTypeName: xyz.xenondevs.invui.gui.Ingredient
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.invui.gui.structure.InventorySlotElementSupplier
+      newFullyQualifiedTypeName: xyz.xenondevs.invui.gui.InventorySlotElementSupplier
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.invui.gui.structure.Marker
+      newFullyQualifiedTypeName: xyz.xenondevs.invui.gui.Marker
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.invui.gui.structure.Markers
+      newFullyQualifiedTypeName: xyz.xenondevs.invui.gui.Markers
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.invui.gui.structure.Structure
+      newFullyQualifiedTypeName: xyz.xenondevs.invui.gui.Structure
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.invui.item.builder.ItemBuilder
+      newFullyQualifiedTypeName: xyz.xenondevs.invui.item.ItemBuilder
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.invui.item.impl.AbstractItem
+      newFullyQualifiedTypeName: xyz.xenondevs.invui.item.AbstractItem
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.invui.item.Click
+      newFullyQualifiedTypeName: xyz.xenondevs.invui.Click
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.inventoryaccess.component.ComponentWrapper
+      newFullyQualifiedTypeName: net.kyori.adventure.text.Component
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.inventoryaccess.map.MapIcon
+      newFullyQualifiedTypeName: xyz.xenondevs.invui.window.CartographyWindow$MapIcon
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: xyz.xenondevs.inventoryaccess.map.MapPatch
+      newFullyQualifiedTypeName: xyz.xenondevs.invui.window.CartographyWindow$MapPatch
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: de.timscho.rewrite.minecraft.invui.v1-to-v2.FactoryAndAccessorRenames
+displayName: Migrate InvUI method/factory renames
+description: Renames straightforward method and factory changes that are safe to automate.
+recipeList:
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: xyz.xenondevs.invui.gui.ScrollGui items()
+      newMethodName: itemsBuilder
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: xyz.xenondevs.invui.gui.ScrollGui guis()
+      newMethodName: guisBuilder
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: xyz.xenondevs.invui.gui.ScrollGui inventories()
+      newMethodName: inventoriesBuilder
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: xyz.xenondevs.invui.gui.ScrollGui getCurrentLine()
+      newMethodName: getLine
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: xyz.xenondevs.invui.gui.ScrollGui setCurrentLine(int)
+      newMethodName: setLine
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: xyz.xenondevs.invui.gui.TabGui normal()
+      newMethodName: builder
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: xyz.xenondevs.invui.gui.TabGui getCurrentTab()
+      newMethodName: getTab
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: xyz.xenondevs.invui.window.AnvilWindow single()
+      newMethodName: builder
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: xyz.xenondevs.invui.window.AnvilWindow split()
+      newMethodName: builder
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: xyz.xenondevs.invui.window.CartographyWindow single()
+      newMethodName: builder
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: xyz.xenondevs.invui.window.CartographyWindow split()
+      newMethodName: builder
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: xyz.xenondevs.invui.inventory.event.PlayerUpdateReason getPlayer()
+      newMethodName: player
+  - org.openrewrite.java.ChangeMethodName:
+      methodPattern: xyz.xenondevs.invui.window.WindowManager getOpenWindows()
+      newMethodName: getWindows
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: de.timscho.rewrite.minecraft.invui.v1-to-v2.CustomVisitors
+displayName: Run custom InvUI migration visitors
+description: Applies custom AST transforms for constructor and API-shape migrations that need semantic logic.
+recipeList:
+  - de.timscho.rewrite.minecraft.invui.RemoveAdventureComponentWrapper
+  - de.timscho.rewrite.minecraft.invui.MigrateStatelessItemProviderToItemWrapper
+  - de.timscho.rewrite.minecraft.invui.MigrateSimpleItemToItem
+  - de.timscho.rewrite.minecraft.invui.MigrateItemGetItemProviderToPlayerApi
+  - de.timscho.rewrite.minecraft.invui.MigrateItemProviderStringGetToLocaleApi
+  - de.timscho.rewrite.minecraft.invui.MigrateControlItemToAbstractBoundItem
+  - de.timscho.rewrite.minecraft.invui.MigrateGuiToNewApi
+  - de.timscho.rewrite.minecraft.invui.MigrateScrollGuiToNewApi
+  - de.timscho.rewrite.minecraft.invui.MigrateWindowToNewApi
+  - de.timscho.rewrite.minecraft.invui.MigratePagedGuiToNewApi
+  - de.timscho.rewrite.minecraft.invui.MigrateItemHandleClickToClickApi
+  - de.timscho.rewrite.minecraft.invui.MigrateClickGettersToRecordAccessors
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: de.timscho.rewrite.minecraft.invui.v1-to-v2.ManualFollowUps
+displayName: Flag manual InvUI 1.x to 2.x follow-ups
+description: Marks usages that require manual migration because API semantics changed or types were removed.
+recipeList:
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.gui.ScrollGui canScroll(int)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.gui.TabGui normal(java.util.function.Consumer)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.gui.TabGui of(int, int, java.util.List, int[])
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.gui.TabGui$Builder addTab(..)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.window.AnvilWindow single(java.util.function.Consumer)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.window.AnvilWindow split(java.util.function.Consumer)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.window.CartographyWindow single(java.util.function.Consumer)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.window.CartographyWindow split(java.util.function.Consumer)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.window.CartographyWindow updateMap(..)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.Click getEvent()
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.gui.GuiParent
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.gui.structure.IngredientList
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.item.builder.AbstractItemBuilder
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.item.builder.BannerBuilder
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.item.builder.FireworkBuilder
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.item.builder.PotionBuilder
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.item.builder.SkullBuilder
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.item.impl.AsyncItem
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.item.impl.AutoCycleItem
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.item.impl.AutoUpdateItem
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.item.impl.CommandItem
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.item.impl.CycleItem
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.item.impl.SuppliedItem
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.item.impl.controlitem.PageItem
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.item.impl.controlitem.ScrollItem
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.item.impl.controlitem.TabItem
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.inventory.StackSizeProvider
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.util.ArrayUtils
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.util.DataUtils
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.util.InventoryUtils
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.util.MathUtils
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.util.SlotUtils
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.util.MojangApiUtils
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.util.Pair
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.util.Point2D
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: de.timscho.rewrite.minecraft.invui.v1-to-v2.RemainingSurfaceFollowUps
+displayName: Flag remaining InvUI v1 surface gaps
+description: Flags remaining removed/changed v1 APIs so the migration has complete follow-up visibility.
+recipeList:
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.inventory.Inventory getPreUpdateHandler()
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.inventory.Inventory setPreUpdateHandler(..)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.inventory.Inventory getPostUpdateHandler()
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.inventory.Inventory setPostUpdateHandler(..)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.inventory.Inventory setItemSilently(..)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.inventory.Inventory replaceItem(..)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.inventory.Inventory isSynced(..)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.inventory.Inventory getGuiPriority()
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.inventory.Inventory addWindow(..)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.inventory.Inventory removeWindow(..)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.window.WindowManager getWindow(org.bukkit.inventory.Inventory)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.window.WindowManager addWindow(..)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.window.WindowManager removeWindow(..)
+  - org.openrewrite.java.search.FindMethods:
+      methodPattern: xyz.xenondevs.invui.inventory.event.PlayerUpdateReason getEvent()
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.animation.impl.AbstractAnimation
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.animation.impl.AbstractSoundAnimation
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.animation.impl.ColumnAnimation
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.animation.impl.HorizontalSnakeAnimation
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.animation.impl.RandomAnimation
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.animation.impl.RowAnimation
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.animation.impl.SequentialAnimation
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.animation.impl.SplitSequentialAnimation
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.animation.impl.VerticalSnakeAnimation
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.gui.AbstractTabGui
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.window.AbstractDoubleWindow
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.window.AbstractSingleWindow
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.window.NormalSingleWindowImpl
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.window.AnvilSingleWindowImpl
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.window.AnvilSplitWindowImpl
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.window.CartographySingleWindowImpl
+  - org.openrewrite.java.search.FindTypes:
+      fullyQualifiedTypeName: xyz.xenondevs.invui.window.CartographySplitWindowImpl
