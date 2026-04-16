@@ -36,8 +36,8 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
         return new JavaIsoVisitor<>() {
             @Override
-            public J.MethodInvocation visitMethodInvocation(final J.MethodInvocation method, final ExecutionContext ctx) {
-                J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
+            public J.@NonNull MethodInvocation visitMethodInvocation(final J.@NonNull MethodInvocation method, final @NonNull ExecutionContext ctx) {
+                final J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
 
                 if (!this.isItemGetItemProviderNoArgInvocation(m) || this.isInsidePlayerGetItemProviderMethod(m)) {
                     return m;
@@ -45,17 +45,17 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
 
                 return JavaTemplate.builder("((org.bukkit.entity.Player) null)")
                     .build()
-                    .apply(getCursor(), m.getCoordinates().replaceArguments());
+                    .apply(this.getCursor(), m.getCoordinates().replaceArguments());
             }
 
             @Override
-            public J.MethodDeclaration visitMethodDeclaration(final J.MethodDeclaration method, final ExecutionContext ctx) {
-                J.MethodDeclaration m = super.visitMethodDeclaration(method, ctx);
+            public J.@NonNull MethodDeclaration visitMethodDeclaration(final J.@NonNull MethodDeclaration method, final @NonNull ExecutionContext ctx) {
+                final J.MethodDeclaration m = super.visitMethodDeclaration(method, ctx);
                 if (!this.isLegacyNoArgGetItemProviderMethod(m)) {
                     return m;
                 }
 
-                final J.ClassDeclaration enclosingClass = getCursor().firstEnclosing(J.ClassDeclaration.class);
+                final J.ClassDeclaration enclosingClass = this.getCursor().firstEnclosing(J.ClassDeclaration.class);
                 if (enclosingClass == null) {
                     return m;
                 }
@@ -71,8 +71,8 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
             }
 
             @Override
-            public J.ClassDeclaration visitClassDeclaration(final J.ClassDeclaration classDecl, final ExecutionContext ctx) {
-                J.ClassDeclaration c = super.visitClassDeclaration(classDecl, ctx);
+            public J.@NonNull ClassDeclaration visitClassDeclaration(final J.@NonNull ClassDeclaration classDecl, final @NonNull ExecutionContext ctx) {
+                final J.ClassDeclaration c = super.visitClassDeclaration(classDecl, ctx);
 
                 if (c.getKind() == J.ClassDeclaration.Kind.Type.Interface || c.getKind() == J.ClassDeclaration.Kind.Type.Annotation) {
                     return c;
@@ -81,15 +81,15 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
                     return c;
                 }
 
-                maybeAddImport(MigrateItemGetItemProviderToPlayerApi.PLAYER);
-                maybeAddImport(MigrateItemGetItemProviderToPlayerApi.ITEM_PROVIDER);
+                this.maybeAddImport(MigrateItemGetItemProviderToPlayerApi.PLAYER);
+                this.maybeAddImport(MigrateItemGetItemProviderToPlayerApi.ITEM_PROVIDER);
                 return JavaTemplate.builder(
                         "@Override public " + MigrateItemGetItemProviderToPlayerApi.ITEM_PROVIDER +
                             " getItemProvider(" + MigrateItemGetItemProviderToPlayerApi.PLAYER + " viewer) { return getItemProvider(); }"
                     )
                     .imports(MigrateItemGetItemProviderToPlayerApi.ITEM_PROVIDER, MigrateItemGetItemProviderToPlayerApi.PLAYER)
                     .build()
-                    .apply(updateCursor(c), c.getBody().getCoordinates().lastStatement());
+                    .apply(this.updateCursor(c), c.getBody().getCoordinates().lastStatement());
             }
 
             private boolean isItemGetItemProviderNoArgInvocation(final J.MethodInvocation method) {
@@ -124,11 +124,11 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
             }
 
             private boolean isInsidePlayerGetItemProviderMethod(final J.MethodInvocation method) {
-                if (method.getSelect() != null && (!(method.getSelect() instanceof J.Identifier identifier) || !"this".equals(identifier.getSimpleName()))) {
+                if (method.getSelect() != null && (!(method.getSelect() instanceof final J.Identifier identifier) || !"this".equals(identifier.getSimpleName()))) {
                     return false;
                 }
 
-                final J.MethodDeclaration enclosingMethod = getCursor().firstEnclosing(J.MethodDeclaration.class);
+                final J.MethodDeclaration enclosingMethod = this.getCursor().firstEnclosing(J.MethodDeclaration.class);
                 return enclosingMethod != null &&
                     "getItemProvider".equals(enclosingMethod.getSimpleName()) &&
                     enclosingMethod.getParameters().size() == 1 &&
@@ -162,7 +162,7 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
             }
 
             private boolean parameterHasType(final Statement parameter, final String fqType) {
-                if (!(parameter instanceof J.VariableDeclarations variableDeclarations)) {
+                if (!(parameter instanceof final J.VariableDeclarations variableDeclarations)) {
                     return false;
                 }
 
@@ -176,10 +176,10 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
                 }
 
                 final String simpleName = fqType.substring(fqType.lastIndexOf('.') + 1);
-                if (typeExpression instanceof J.Identifier identifier) {
+                if (typeExpression instanceof final J.Identifier identifier) {
                     return simpleName.equals(identifier.getSimpleName());
                 }
-                if (typeExpression instanceof J.FieldAccess fieldAccess) {
+                if (typeExpression instanceof final J.FieldAccess fieldAccess) {
                     return simpleName.equals(fieldAccess.getSimpleName());
                 }
 

@@ -32,10 +32,10 @@ public class RemoveAdventureComponentWrapper extends Recipe {
                 if (nc instanceof final J.NewClass n &&
                     n.getClazz() != null &&
                     TypeUtils.isOfClassType(n.getType(), RemoveAdventureComponentWrapper.ADVENTURE_COMPONENT_WRAPPER) && n.getArguments().size() == 1) {
-                        final Expression innerArg = n.getArguments().getFirst();
-                        this.maybeRemoveImport(RemoveAdventureComponentWrapper.ADVENTURE_COMPONENT_WRAPPER);
-                        return innerArg.withPrefix(n.getPrefix());
-                    }
+                    final Expression innerArg = n.getArguments().getFirst();
+                    this.maybeRemoveImport(RemoveAdventureComponentWrapper.ADVENTURE_COMPONENT_WRAPPER);
+                    return innerArg.withPrefix(n.getPrefix());
+                }
 
 
                 return nc;

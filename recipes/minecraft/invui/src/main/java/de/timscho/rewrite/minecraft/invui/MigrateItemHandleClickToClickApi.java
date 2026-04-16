@@ -14,9 +14,8 @@ import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.Statement;
 import org.openrewrite.java.tree.TypeTree;
 import org.openrewrite.java.tree.TypeUtils;
-
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class MigrateItemHandleClickToClickApi extends Recipe {
     private static final String ITEM = "xyz.xenondevs.invui.item.Item";
@@ -45,20 +44,20 @@ public class MigrateItemHandleClickToClickApi extends Recipe {
 
                 final JavaType.Method methodType = method.getMethodType();
                 if (methodType != null) {
-                    if (!TypeUtils.isAssignableTo(ITEM, methodType.getDeclaringType())) {
+                    if (!TypeUtils.isAssignableTo(MigrateItemHandleClickToClickApi.ITEM, methodType.getDeclaringType())) {
                         return false;
                     }
 
                     final List<JavaType> parameterTypes = methodType.getParameterTypes();
                     return parameterTypes.size() == 3
-                        && TypeUtils.isOfClassType(parameterTypes.get(0), CLICK_TYPE)
-                        && TypeUtils.isOfClassType(parameterTypes.get(1), PLAYER)
-                        && TypeUtils.isOfClassType(parameterTypes.get(2), INVENTORY_CLICK_EVENT);
+                        && TypeUtils.isOfClassType(parameterTypes.get(0), MigrateItemHandleClickToClickApi.CLICK_TYPE)
+                        && TypeUtils.isOfClassType(parameterTypes.get(1), MigrateItemHandleClickToClickApi.PLAYER)
+                        && TypeUtils.isOfClassType(parameterTypes.get(2), MigrateItemHandleClickToClickApi.INVENTORY_CLICK_EVENT);
                 }
 
-                return parameterHasType(method.getParameters().get(0), CLICK_TYPE)
-                    && parameterHasType(method.getParameters().get(1), PLAYER)
-                    && parameterHasType(method.getParameters().get(2), INVENTORY_CLICK_EVENT);
+                return this.parameterHasType(method.getParameters().get(0), MigrateItemHandleClickToClickApi.CLICK_TYPE)
+                    && this.parameterHasType(method.getParameters().get(1), MigrateItemHandleClickToClickApi.PLAYER)
+                    && this.parameterHasType(method.getParameters().get(2), MigrateItemHandleClickToClickApi.INVENTORY_CLICK_EVENT);
             }
 
             private boolean isLegacyHandleClickInvocation(final J.MethodInvocation method) {
@@ -68,52 +67,51 @@ public class MigrateItemHandleClickToClickApi extends Recipe {
 
                 final JavaType.Method methodType = method.getMethodType();
                 if (methodType != null) {
-                    if (!TypeUtils.isAssignableTo(ITEM, methodType.getDeclaringType())) {
+                    if (!TypeUtils.isAssignableTo(MigrateItemHandleClickToClickApi.ITEM, methodType.getDeclaringType())) {
                         return false;
                     }
 
                     final List<JavaType> parameterTypes = methodType.getParameterTypes();
                     return parameterTypes.size() == 3
-                        && TypeUtils.isOfClassType(parameterTypes.get(0), CLICK_TYPE)
-                        && TypeUtils.isOfClassType(parameterTypes.get(1), PLAYER)
-                        && TypeUtils.isOfClassType(parameterTypes.get(2), INVENTORY_CLICK_EVENT);
+                        && TypeUtils.isOfClassType(parameterTypes.get(0), MigrateItemHandleClickToClickApi.CLICK_TYPE)
+                        && TypeUtils.isOfClassType(parameterTypes.get(1), MigrateItemHandleClickToClickApi.PLAYER)
+                        && TypeUtils.isOfClassType(parameterTypes.get(2), MigrateItemHandleClickToClickApi.INVENTORY_CLICK_EVENT);
                 }
 
-                return TypeUtils.isOfClassType(method.getArguments().get(0).getType(), CLICK_TYPE)
-                    && TypeUtils.isOfClassType(method.getArguments().get(1).getType(), PLAYER)
-                    && TypeUtils.isOfClassType(method.getArguments().get(2).getType(), INVENTORY_CLICK_EVENT);
+                return TypeUtils.isOfClassType(method.getArguments().get(0).getType(), MigrateItemHandleClickToClickApi.CLICK_TYPE)
+                    && TypeUtils.isOfClassType(method.getArguments().get(1).getType(), MigrateItemHandleClickToClickApi.PLAYER)
+                    && TypeUtils.isOfClassType(method.getArguments().get(2).getType(), MigrateItemHandleClickToClickApi.INVENTORY_CLICK_EVENT);
             }
 
             @Override
-            public J.MethodDeclaration visitMethodDeclaration(final J.MethodDeclaration method, final ExecutionContext ctx) {
-                J.MethodDeclaration m = super.visitMethodDeclaration(method, ctx);
-                if (!isLegacyHandleClickDeclaration(m) || m.getParameters().size() != 3) {
+            public J.@NonNull MethodDeclaration visitMethodDeclaration(final J.@NonNull MethodDeclaration method, final @NonNull ExecutionContext ctx) {
+                final J.MethodDeclaration m = super.visitMethodDeclaration(method, ctx);
+                if (!this.isLegacyHandleClickDeclaration(m) || m.getParameters().size() != 3) {
                     return m;
                 }
 
-                if (!(m.getParameters().get(2) instanceof J.VariableDeclarations thirdParam)) {
+                if (!(m.getParameters().get(2) instanceof final J.VariableDeclarations thirdParam)) {
                     return m;
                 }
-                maybeAddImport(CLICK);
-                maybeRemoveImport(INVENTORY_CLICK_EVENT);
-                final Statement migratedThirdParam = (Statement) new ChangeType(INVENTORY_CLICK_EVENT, CLICK, true)
+                this.maybeAddImport(MigrateItemHandleClickToClickApi.CLICK);
+                this.maybeRemoveImport(MigrateItemHandleClickToClickApi.INVENTORY_CLICK_EVENT);
+                final Statement migratedThirdParam = (Statement) new ChangeType(MigrateItemHandleClickToClickApi.INVENTORY_CLICK_EVENT, MigrateItemHandleClickToClickApi.CLICK, true)
                     .getVisitor()
-                    .visit(thirdParam, ctx, new Cursor(getCursor(), thirdParam));
+                    .visit(thirdParam, ctx, new Cursor(this.getCursor(), thirdParam));
                 if (migratedThirdParam == null) {
                     return m;
                 }
 
-                final List<Statement> updatedParameters = m.getParameters().stream()
-                    .collect(Collectors.toList());
+                final List<Statement> updatedParameters = new ArrayList<>(m.getParameters());
                 updatedParameters.set(2, migratedThirdParam);
                 return m.withParameters(updatedParameters);
             }
 
             @Override
-            public J.MethodInvocation visitMethodInvocation(final J.MethodInvocation method, final ExecutionContext ctx) {
+            public J.@NonNull MethodInvocation visitMethodInvocation(final J.@NonNull MethodInvocation method, final @NonNull ExecutionContext ctx) {
                 J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
                 m = this.migrateLegacyHandleClickEventAccessors(m);
-                if (!isLegacyHandleClickInvocation(m) || m.getArguments().size() != 3) {
+                if (!this.isLegacyHandleClickInvocation(m) || m.getArguments().size() != 3) {
                     return m;
                 }
 
@@ -121,15 +119,15 @@ public class MigrateItemHandleClickToClickApi extends Recipe {
                 final Expression playerArg = m.getArguments().get(1);
                 final Expression eventArg = m.getArguments().get(2);
 
-                maybeAddImport(CLICK);
+                this.maybeAddImport(MigrateItemHandleClickToClickApi.CLICK);
                 return JavaTemplate.builder(
-                    "#{any(" + CLICK_TYPE + ")}, #{any(" + PLAYER + ")}, " +
-                        "new " + CLICK + "(#{any(" + PLAYER + ")}, #{any(" + CLICK_TYPE + ")}, #{any(" + INVENTORY_CLICK_EVENT + ")}.getHotbarButton())"
-                )
-                    .imports(CLICK)
+                        "#{any(" + MigrateItemHandleClickToClickApi.CLICK_TYPE + ")}, #{any(" + MigrateItemHandleClickToClickApi.PLAYER + ")}, " +
+                            "new " + MigrateItemHandleClickToClickApi.CLICK + "(#{any(" + MigrateItemHandleClickToClickApi.PLAYER + ")}, #{any(" + MigrateItemHandleClickToClickApi.CLICK_TYPE + ")}, #{any(" + MigrateItemHandleClickToClickApi.INVENTORY_CLICK_EVENT + ")}.getHotbarButton())"
+                    )
+                    .imports(MigrateItemHandleClickToClickApi.CLICK)
                     .build()
                     .apply(
-                        getCursor(),
+                        this.getCursor(),
                         m.getCoordinates().replaceArguments(),
                         clickTypeArg,
                         playerArg,
@@ -154,7 +152,7 @@ public class MigrateItemHandleClickToClickApi extends Recipe {
                     return method;
                 }
 
-                final J.MethodDeclaration enclosingMethod = getCursor().firstEnclosing(J.MethodDeclaration.class);
+                final J.MethodDeclaration enclosingMethod = this.getCursor().firstEnclosing(J.MethodDeclaration.class);
                 if (enclosingMethod == null || !this.isHandleClickLikeMethod(enclosingMethod)) {
                     return method;
                 }
@@ -170,14 +168,14 @@ public class MigrateItemHandleClickToClickApi extends Recipe {
             private boolean isHandleClickLikeMethod(final J.MethodDeclaration method) {
                 return "handleClick".equals(method.getSimpleName()) &&
                     method.getParameters().size() == 3 &&
-                    parameterHasType(method.getParameters().get(0), CLICK_TYPE) &&
-                    parameterHasType(method.getParameters().get(1), PLAYER) &&
-                    (parameterHasType(method.getParameters().get(2), INVENTORY_CLICK_EVENT) ||
-                        parameterHasType(method.getParameters().get(2), CLICK));
+                    this.parameterHasType(method.getParameters().get(0), MigrateItemHandleClickToClickApi.CLICK_TYPE) &&
+                    this.parameterHasType(method.getParameters().get(1), MigrateItemHandleClickToClickApi.PLAYER) &&
+                    (this.parameterHasType(method.getParameters().get(2), MigrateItemHandleClickToClickApi.INVENTORY_CLICK_EVENT) ||
+                        this.parameterHasType(method.getParameters().get(2), MigrateItemHandleClickToClickApi.CLICK));
             }
 
             private String thirdParameterName(final J.MethodDeclaration method) {
-                if (method.getParameters().size() != 3 || !(method.getParameters().get(2) instanceof J.VariableDeclarations variableDeclarations)) {
+                if (method.getParameters().size() != 3 || !(method.getParameters().get(2) instanceof final J.VariableDeclarations variableDeclarations)) {
                     return null;
                 }
                 if (variableDeclarations.getVariables().isEmpty()) {
@@ -187,7 +185,7 @@ public class MigrateItemHandleClickToClickApi extends Recipe {
             }
 
             private boolean parameterHasType(final Statement parameter, final String fqType) {
-                if (!(parameter instanceof J.VariableDeclarations variableDeclarations)) {
+                if (!(parameter instanceof final J.VariableDeclarations variableDeclarations)) {
                     return false;
                 }
 
@@ -199,14 +197,14 @@ public class MigrateItemHandleClickToClickApi extends Recipe {
 
                 final String simpleName = fqType.substring(fqType.lastIndexOf('.') + 1);
                 final TypeTree typeExpression = variableDeclarations.getTypeExpression();
-                if (typeExpression instanceof J.Identifier identifier) {
+                if (typeExpression instanceof final J.Identifier identifier) {
                     return simpleName.equals(identifier.getSimpleName());
                 }
-                if (typeExpression instanceof J.FieldAccess fieldAccess) {
+                if (typeExpression instanceof final J.FieldAccess fieldAccess) {
                     return simpleName.equals(fieldAccess.getSimpleName());
                 }
 
-                final String parameterSource = variableDeclarations.printTrimmed(getCursor());
+                final String parameterSource = variableDeclarations.printTrimmed(this.getCursor());
                 return parameterSource.contains(fqType) || parameterSource.contains(" " + simpleName + " ");
             }
         };

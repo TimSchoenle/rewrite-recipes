@@ -12,12 +12,12 @@ import org.openrewrite.java.tree.TypeUtils;
 
 public class MigrateAnvilWindowToOldApi extends Recipe {
     private static final String ANVIL_WINDOW = "xyz.xenondevs.invui.window.AnvilWindow";
-    private static final String ANVIL_WINDOW_BUILDER = ANVIL_WINDOW + "$Builder";
+    private static final String ANVIL_WINDOW_BUILDER = MigrateAnvilWindowToOldApi.ANVIL_WINDOW + "$Builder";
 
     private static final MethodMatcher ANVIL_WINDOW_FACTORY_BUILDER_NO_ARGS =
-        new MethodMatcher(ANVIL_WINDOW + " builder()");
+        new MethodMatcher(MigrateAnvilWindowToOldApi.ANVIL_WINDOW + " builder()");
     private static final MethodMatcher ANVIL_WINDOW_BUILDER_SET_UPPER_GUI =
-        new MethodMatcher(ANVIL_WINDOW_BUILDER + " setUpperGui(..)");
+        new MethodMatcher(MigrateAnvilWindowToOldApi.ANVIL_WINDOW_BUILDER + " setUpperGui(..)");
 
     @Override
     public @NonNull String getDisplayName() {
@@ -33,14 +33,14 @@ public class MigrateAnvilWindowToOldApi extends Recipe {
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
         return new JavaIsoVisitor<>() {
             @Override
-            public J.MethodInvocation visitMethodInvocation(final J.MethodInvocation method, final ExecutionContext ctx) {
-                J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
+            public J.@NonNull MethodInvocation visitMethodInvocation(final J.@NonNull MethodInvocation method, final @NonNull ExecutionContext ctx) {
+                final J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
 
-                if (ANVIL_WINDOW_FACTORY_BUILDER_NO_ARGS.matches(m)) {
+                if (MigrateAnvilWindowToOldApi.ANVIL_WINDOW_FACTORY_BUILDER_NO_ARGS.matches(m)) {
                     return m.withName(m.getName().withSimpleName("split"));
                 }
 
-                if (isSetUpperGuiOnAnvilWindowBuilderHierarchy(m)) {
+                if (this.isSetUpperGuiOnAnvilWindowBuilderHierarchy(m)) {
                     return m.withName(m.getName().withSimpleName("setGui"));
                 }
 
@@ -48,7 +48,7 @@ public class MigrateAnvilWindowToOldApi extends Recipe {
             }
 
             private boolean isSetUpperGuiOnAnvilWindowBuilderHierarchy(final J.MethodInvocation method) {
-                if (ANVIL_WINDOW_BUILDER_SET_UPPER_GUI.matches(method)) {
+                if (MigrateAnvilWindowToOldApi.ANVIL_WINDOW_BUILDER_SET_UPPER_GUI.matches(method)) {
                     return true;
                 }
 
@@ -58,11 +58,11 @@ public class MigrateAnvilWindowToOldApi extends Recipe {
 
                 final JavaType.Method methodType = method.getMethodType();
                 if (methodType != null) {
-                    return TypeUtils.isAssignableTo(ANVIL_WINDOW_BUILDER, methodType.getDeclaringType());
+                    return TypeUtils.isAssignableTo(MigrateAnvilWindowToOldApi.ANVIL_WINDOW_BUILDER, methodType.getDeclaringType());
                 }
 
                 return method.getSelect() != null &&
-                    TypeUtils.isAssignableTo(ANVIL_WINDOW_BUILDER, method.getSelect().getType());
+                    TypeUtils.isAssignableTo(MigrateAnvilWindowToOldApi.ANVIL_WINDOW_BUILDER, method.getSelect().getType());
             }
         };
     }

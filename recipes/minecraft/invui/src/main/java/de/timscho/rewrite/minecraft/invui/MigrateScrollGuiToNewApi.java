@@ -21,18 +21,18 @@ public class MigrateScrollGuiToNewApi extends Recipe {
     private static final String INVENTORY = "xyz.xenondevs.invui.inventory.Inventory";
 
     private static final MethodMatcher SCROLL_GUI_ITEMS_WITH_CONSUMER =
-        new MethodMatcher(SCROLL_GUI + " items(java.util.function.Consumer)");
+        new MethodMatcher(MigrateScrollGuiToNewApi.SCROLL_GUI + " items(java.util.function.Consumer)");
     private static final MethodMatcher SCROLL_GUI_GUIS_WITH_CONSUMER =
-        new MethodMatcher(SCROLL_GUI + " guis(java.util.function.Consumer)");
+        new MethodMatcher(MigrateScrollGuiToNewApi.SCROLL_GUI + " guis(java.util.function.Consumer)");
     private static final MethodMatcher SCROLL_GUI_INVENTORIES_WITH_CONSUMER =
-        new MethodMatcher(SCROLL_GUI + " inventories(java.util.function.Consumer)");
+        new MethodMatcher(MigrateScrollGuiToNewApi.SCROLL_GUI + " inventories(java.util.function.Consumer)");
 
     private static final MethodMatcher SCROLL_GUI_OF_ITEMS_WITH_INT_SLOTS =
-        new MethodMatcher(SCROLL_GUI + " ofItems(int, int, java.util.List, int[])");
+        new MethodMatcher(MigrateScrollGuiToNewApi.SCROLL_GUI + " ofItems(int, int, java.util.List, int[])");
     private static final MethodMatcher SCROLL_GUI_OF_GUIS_WITH_INT_SLOTS =
-        new MethodMatcher(SCROLL_GUI + " ofGuis(int, int, java.util.List, int[])");
+        new MethodMatcher(MigrateScrollGuiToNewApi.SCROLL_GUI + " ofGuis(int, int, java.util.List, int[])");
     private static final MethodMatcher SCROLL_GUI_OF_INVENTORIES_WITH_INT_SLOTS =
-        new MethodMatcher(SCROLL_GUI + " ofInventories(int, int, java.util.List, int[])");
+        new MethodMatcher(MigrateScrollGuiToNewApi.SCROLL_GUI + " ofInventories(int, int, java.util.List, int[])");
 
     @Override
     public @NonNull String getDisplayName() {
@@ -48,39 +48,39 @@ public class MigrateScrollGuiToNewApi extends Recipe {
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
         return new JavaIsoVisitor<>() {
             @Override
-            public J.MethodInvocation visitMethodInvocation(final J.MethodInvocation method, final ExecutionContext ctx) {
-                J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
+            public J.@NonNull MethodInvocation visitMethodInvocation(final J.@NonNull MethodInvocation method, final @NonNull ExecutionContext ctx) {
+                final J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
 
-                if (SCROLL_GUI_ITEMS_WITH_CONSUMER.matches(m)) {
+                if (MigrateScrollGuiToNewApi.SCROLL_GUI_ITEMS_WITH_CONSUMER.matches(m)) {
                     return this.migrateFactoryConsumerOverload(
                         m,
-                        "xyz.xenondevs.invui.gui.ScrollGui<" + ITEM + ">",
-                        "xyz.xenondevs.invui.gui.ScrollGui.Builder<" + ITEM + ">",
+                        "xyz.xenondevs.invui.gui.ScrollGui<" + MigrateScrollGuiToNewApi.ITEM + ">",
+                        "xyz.xenondevs.invui.gui.ScrollGui.Builder<" + MigrateScrollGuiToNewApi.ITEM + ">",
                         "xyz.xenondevs.invui.gui.ScrollGui.itemsBuilder()"
                     );
                 }
 
-                if (SCROLL_GUI_GUIS_WITH_CONSUMER.matches(m)) {
+                if (MigrateScrollGuiToNewApi.SCROLL_GUI_GUIS_WITH_CONSUMER.matches(m)) {
                     return this.migrateFactoryConsumerOverload(
                         m,
-                        "xyz.xenondevs.invui.gui.ScrollGui<" + GUI + ">",
-                        "xyz.xenondevs.invui.gui.ScrollGui.Builder<" + GUI + ">",
+                        "xyz.xenondevs.invui.gui.ScrollGui<" + MigrateScrollGuiToNewApi.GUI + ">",
+                        "xyz.xenondevs.invui.gui.ScrollGui.Builder<" + MigrateScrollGuiToNewApi.GUI + ">",
                         "xyz.xenondevs.invui.gui.ScrollGui.guisBuilder()"
                     );
                 }
 
-                if (SCROLL_GUI_INVENTORIES_WITH_CONSUMER.matches(m)) {
+                if (MigrateScrollGuiToNewApi.SCROLL_GUI_INVENTORIES_WITH_CONSUMER.matches(m)) {
                     return this.migrateFactoryConsumerOverload(
                         m,
-                        "xyz.xenondevs.invui.gui.ScrollGui<" + INVENTORY + ">",
-                        "xyz.xenondevs.invui.gui.ScrollGui.Builder<" + INVENTORY + ">",
+                        "xyz.xenondevs.invui.gui.ScrollGui<" + MigrateScrollGuiToNewApi.INVENTORY + ">",
+                        "xyz.xenondevs.invui.gui.ScrollGui.Builder<" + MigrateScrollGuiToNewApi.INVENTORY + ">",
                         "xyz.xenondevs.invui.gui.ScrollGui.inventoriesBuilder()"
                     );
                 }
 
-                if (SCROLL_GUI_OF_ITEMS_WITH_INT_SLOTS.matches(m)
-                    || SCROLL_GUI_OF_GUIS_WITH_INT_SLOTS.matches(m)
-                    || SCROLL_GUI_OF_INVENTORIES_WITH_INT_SLOTS.matches(m)) {
+                if (MigrateScrollGuiToNewApi.SCROLL_GUI_OF_ITEMS_WITH_INT_SLOTS.matches(m)
+                    || MigrateScrollGuiToNewApi.SCROLL_GUI_OF_GUIS_WITH_INT_SLOTS.matches(m)
+                    || MigrateScrollGuiToNewApi.SCROLL_GUI_OF_INVENTORIES_WITH_INT_SLOTS.matches(m)) {
                     return this.migrateLegacyOfFactory(m);
                 }
 
@@ -99,15 +99,15 @@ public class MigrateScrollGuiToNewApi extends Recipe {
 
                 final Expression consumer = method.getArguments().getFirst();
                 return JavaTemplate.builder(
-                    "((java.util.function.Supplier<" + returnType + ">) () -> {" +
-                        "java.util.function.Consumer<" + builderType + "> consumer = #{any(java.util.function.Consumer)};" +
-                        builderType + " builder = " + builderFactory + ";" +
-                        "consumer.accept(builder);" +
-                        "return builder.build();" +
-                        "}).get()"
-                )
+                        "((java.util.function.Supplier<" + returnType + ">) () -> {" +
+                            "java.util.function.Consumer<" + builderType + "> consumer = #{any(java.util.function.Consumer)};" +
+                            builderType + " builder = " + builderFactory + ";" +
+                            "consumer.accept(builder);" +
+                            "return builder.build();" +
+                            "}).get()"
+                    )
                     .build()
-                    .apply(getCursor(), method.getCoordinates().replace(), consumer)
+                    .apply(this.getCursor(), method.getCoordinates().replace(), consumer)
                     .withPrefix(method.getPrefix());
             }
 
@@ -121,9 +121,9 @@ public class MigrateScrollGuiToNewApi extends Recipe {
                 final Expression content = method.getArguments().get(2);
                 final List<Expression> contentListSlotArguments = method.getArguments().subList(3, method.getArguments().size());
 
-                final String widthSource = width.printTrimmed(getCursor());
+                final String widthSource = width.printTrimmed(this.getCursor());
                 final String contentListSlotCsv = contentListSlotArguments.stream()
-                    .map(arg -> arg.printTrimmed(getCursor()))
+                    .map(arg -> arg.printTrimmed(this.getCursor()))
                     .collect(Collectors.joining(", "));
                 final String migratedContentListSlots =
                     "java.util.stream.IntStream.of(" + contentListSlotCsv + ")" +
@@ -131,12 +131,12 @@ public class MigrateScrollGuiToNewApi extends Recipe {
                         ".toList()";
 
                 return JavaTemplate.builder(
-                    "#{any(int)}, #{any(int)}, #{any(java.util.List)}, " +
-                        migratedContentListSlots +
-                        ", xyz.xenondevs.invui.gui.ScrollGui.LineOrientation.HORIZONTAL"
-                )
+                        "#{any(int)}, #{any(int)}, #{any(java.util.List)}, " +
+                            migratedContentListSlots +
+                            ", xyz.xenondevs.invui.gui.ScrollGui.LineOrientation.HORIZONTAL"
+                    )
                     .build()
-                    .apply(getCursor(), method.getCoordinates().replaceArguments(), width, height, content);
+                    .apply(this.getCursor(), method.getCoordinates().replaceArguments(), width, height, content);
             }
         };
     }

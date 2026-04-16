@@ -25,7 +25,7 @@ public class MigrateClickGettersToRecordAccessors extends Recipe {
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
         return new JavaIsoVisitor<>() {
             @Override
-            public J.CompilationUnit visitCompilationUnit(final J.CompilationUnit compilationUnit, final ExecutionContext ctx) {
+            public J.@NonNull CompilationUnit visitCompilationUnit(final J.@NonNull CompilationUnit compilationUnit, final @NonNull ExecutionContext ctx) {
                 this.doAfterVisit(new ChangeMethodName(
                     MigrateClickGettersToRecordAccessors.CLICK + " getPlayer()",
                     "player",

@@ -55,7 +55,7 @@ public class MigrateWindowToNewApi extends Recipe {
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
         return new JavaIsoVisitor<>() {
             @Override
-            public J.CompilationUnit visitCompilationUnit(final J.CompilationUnit compilationUnit, final ExecutionContext ctx) {
+            public J.@NonNull CompilationUnit visitCompilationUnit(final J.@NonNull CompilationUnit compilationUnit, final @NonNull ExecutionContext ctx) {
                 if (this.usesWindowMethods(compilationUnit)) {
                     this.doAfterVisit(new ChangeType(MigrateWindowToNewApi.COMPONENT_WRAPPER, MigrateWindowToNewApi.ADVENTURE_COMPONENT, true).getVisitor());
                     this.doAfterVisit(new ChangeType(MigrateWindowToNewApi.INVENTORY_CLICK_EVENT, MigrateWindowToNewApi.CLICK_EVENT, true).getVisitor());
@@ -64,7 +64,7 @@ public class MigrateWindowToNewApi extends Recipe {
             }
 
             @Override
-            public J.MethodInvocation visitMethodInvocation(final J.MethodInvocation method, final ExecutionContext ctx) {
+            public J.@NonNull MethodInvocation visitMethodInvocation(final J.@NonNull MethodInvocation method, final @NonNull ExecutionContext ctx) {
                 J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
 
                 if (MigrateWindowToNewApi.WINDOW_FACTORY_SPLIT_NO_ARGS.matches(m)) {
@@ -129,7 +129,7 @@ public class MigrateWindowToNewApi extends Recipe {
                 final Expression closeHandler = method.getArguments().getFirst();
                 return JavaTemplate.builder("__reason -> ((java.lang.Runnable) #{any()}).run()")
                     .build()
-                    .apply(getCursor(), method.getCoordinates().replaceArguments(), closeHandler);
+                    .apply(this.getCursor(), method.getCoordinates().replaceArguments(), closeHandler);
             }
 
             private boolean isBaseComponentArray(final JavaType type) {
@@ -204,7 +204,7 @@ public class MigrateWindowToNewApi extends Recipe {
                 final AtomicBoolean usesWindowMethods = new AtomicBoolean(false);
                 new JavaIsoVisitor<AtomicBoolean>() {
                     @Override
-                    public J.MethodDeclaration visitMethodDeclaration(final J.MethodDeclaration method, final AtomicBoolean found) {
+                    public J.@NonNull MethodDeclaration visitMethodDeclaration(final J.@NonNull MethodDeclaration method, final @NonNull AtomicBoolean found) {
                         final J.MethodDeclaration m = super.visitMethodDeclaration(method, found);
                         if (m.getMethodType() != null && TypeUtils.isOfClassType(m.getMethodType().getDeclaringType(), MigrateWindowToNewApi.WINDOW)) {
                             found.set(true);
@@ -213,7 +213,7 @@ public class MigrateWindowToNewApi extends Recipe {
                     }
 
                     @Override
-                    public J.MethodInvocation visitMethodInvocation(final J.MethodInvocation method, final AtomicBoolean found) {
+                    public J.@NonNull MethodInvocation visitMethodInvocation(final J.@NonNull MethodInvocation method, final @NonNull AtomicBoolean found) {
                         final J.MethodInvocation m = super.visitMethodInvocation(method, found);
                         if (MigrateWindowToNewApi.WINDOW_FACTORY_SPLIT_NO_ARGS.matches(m)
                             || MigrateWindowToNewApi.WINDOW_FACTORY_MERGED_NO_ARGS.matches(m)
