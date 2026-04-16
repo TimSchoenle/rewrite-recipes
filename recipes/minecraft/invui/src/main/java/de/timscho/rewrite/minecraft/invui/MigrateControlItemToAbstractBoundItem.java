@@ -45,13 +45,13 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
         return new JavaIsoVisitor<>() {
             @Override
-            public J.CompilationUnit visitCompilationUnit(final J.CompilationUnit compilationUnit, final ExecutionContext ctx) {
+            public J.@NonNull CompilationUnit visitCompilationUnit(final J.@NonNull CompilationUnit compilationUnit, final @NonNull ExecutionContext ctx) {
                 this.doAfterVisit(new ChangeType(MigrateControlItemToAbstractBoundItem.CONTROL_ITEM, MigrateControlItemToAbstractBoundItem.ABSTRACT_BOUND_ITEM, true).getVisitor());
                 return super.visitCompilationUnit(compilationUnit, ctx);
             }
 
             @Override
-            public J.MethodInvocation visitMethodInvocation(final J.MethodInvocation method, final ExecutionContext ctx) {
+            public J.@NonNull MethodInvocation visitMethodInvocation(final J.@NonNull MethodInvocation method, final @NonNull ExecutionContext ctx) {
                 J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
 
                 if (this.isSetGuiOnControlItemHierarchy(m)) {
@@ -60,14 +60,14 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
                 if (this.isGetItemProviderOnControlItemHierarchy(m)) {
                     m = JavaTemplate.builder("((org.bukkit.entity.Player) null)")
                         .build()
-                        .apply(getCursor(), m.getCoordinates().replaceArguments());
+                        .apply(this.getCursor(), m.getCoordinates().replaceArguments());
                 }
 
                 return m;
             }
 
             @Override
-            public J.MethodDeclaration visitMethodDeclaration(final J.MethodDeclaration method, final ExecutionContext ctx) {
+            public J.@NonNull MethodDeclaration visitMethodDeclaration(final J.@NonNull MethodDeclaration method, final @NonNull ExecutionContext ctx) {
                 final J.MethodDeclaration m = super.visitMethodDeclaration(method, ctx);
 
                 if (!"setGui".equals(m.getSimpleName()) || m.getParameters().size() != 1) {
@@ -90,7 +90,7 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
             }
 
             @Override
-            public J.ParameterizedType visitParameterizedType(final J.ParameterizedType parameterizedType, final ExecutionContext ctx) {
+            public J.@NonNull ParameterizedType visitParameterizedType(final J.@NonNull ParameterizedType parameterizedType, final @NonNull ExecutionContext ctx) {
                 final J.ParameterizedType p = super.visitParameterizedType(parameterizedType, ctx);
                 final J.ParameterizedType withoutGuiTypeArguments = this.removeGuiTypeArguments(p);
                 if (withoutGuiTypeArguments != p) {
@@ -103,7 +103,7 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
             }
 
             @Override
-            public J.ClassDeclaration visitClassDeclaration(final J.ClassDeclaration classDecl, final ExecutionContext ctx) {
+            public J.@NonNull ClassDeclaration visitClassDeclaration(final J.@NonNull ClassDeclaration classDecl, final @NonNull ExecutionContext ctx) {
                 J.ClassDeclaration c = super.visitClassDeclaration(classDecl, ctx);
 
                 if (c.getExtends() instanceof final J.ParameterizedType parameterizedExtends) {
@@ -231,7 +231,7 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
             }
 
             private boolean parameterHasType(final Statement parameter, final String fqType) {
-                if (!(parameter instanceof J.VariableDeclarations variableDeclarations)) {
+                if (!(parameter instanceof final J.VariableDeclarations variableDeclarations)) {
                     return false;
                 }
 
@@ -243,14 +243,14 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
 
                 final String simpleName = fqType.substring(fqType.lastIndexOf('.') + 1);
                 final TypeTree typeExpression = variableDeclarations.getTypeExpression();
-                if (typeExpression instanceof J.Identifier identifier) {
+                if (typeExpression instanceof final J.Identifier identifier) {
                     return simpleName.equals(identifier.getSimpleName());
                 }
-                if (typeExpression instanceof J.FieldAccess fieldAccess) {
+                if (typeExpression instanceof final J.FieldAccess fieldAccess) {
                     return simpleName.equals(fieldAccess.getSimpleName());
                 }
 
-                final String parameterSource = variableDeclarations.printTrimmed(getCursor());
+                final String parameterSource = variableDeclarations.printTrimmed(this.getCursor());
                 return parameterSource.contains(fqType) || parameterSource.contains(" " + simpleName + " ");
             }
 
@@ -305,9 +305,12 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
             }
 
             private String typePattern(final JavaType type) {
-                return TypeUtils.asFullyQualified(type) != null
-                    ? TypeUtils.asFullyQualified(type).getFullyQualifiedName()
-                    : MigrateControlItemToAbstractBoundItem.GUI;
+                if (TypeUtils.asFullyQualified(type) != null) {
+                    assert TypeUtils.asFullyQualified(type) != null;
+                    return TypeUtils.asFullyQualified(type).getFullyQualifiedName();
+                } else {
+                    return MigrateControlItemToAbstractBoundItem.GUI;
+                }
             }
 
             private boolean isSetGuiOnControlItemHierarchy(final J.MethodInvocation method) {
@@ -470,7 +473,7 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
             }
 
             private J.ParameterizedType removeGuiTypeArgumentsFromExtendsBySource(final J.ClassDeclaration classDecl,
-                                                                                   final J.ParameterizedType extendsType) {
+                                                                                  final J.ParameterizedType extendsType) {
                 final List<Expression> typeArguments = extendsType.getTypeParameters();
                 if (typeArguments == null || typeArguments.isEmpty()) {
                     return extendsType;
@@ -592,7 +595,7 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
 
                 final List<Expression> normalizedTypeArguments = new ArrayList<>(typeArguments);
                 final Expression firstTypeArgument = normalizedTypeArguments.getFirst();
-                normalizedTypeArguments.set(0, (Expression) firstTypeArgument.withPrefix(firstTypeArgument.getPrefix().withWhitespace("")));
+                normalizedTypeArguments.set(0, firstTypeArgument.withPrefix(firstTypeArgument.getPrefix().withWhitespace("")));
                 return normalizedTypeArguments;
             }
 
@@ -641,10 +644,10 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
                 if (this.isGuiRelatedType(typeArgument.getType())) {
                     return true;
                 }
-                if (typeArgument instanceof J.Identifier identifier) {
+                if (typeArgument instanceof final J.Identifier identifier) {
                     return "Gui".equals(identifier.getSimpleName());
                 }
-                if (typeArgument instanceof J.FieldAccess fieldAccess) {
+                if (typeArgument instanceof final J.FieldAccess fieldAccess) {
                     return "Gui".equals(fieldAccess.getSimpleName());
                 }
                 return false;
@@ -672,7 +675,7 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
             }
 
             private List<JavaType> declaredTypeParameters(final JavaType type) {
-                if (type instanceof final JavaType.Parameterized parameterized && parameterized.getType() != null) {
+                if (type instanceof final JavaType.Parameterized parameterized) {
                     return parameterized.getType().getTypeParameters();
                 }
                 final JavaType.FullyQualified fullyQualified = TypeUtils.asFullyQualified(type);
@@ -698,7 +701,7 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
                 if (type == null) {
                     return false;
                 }
-                if (type instanceof final JavaType.Parameterized parameterized && parameterized.getType() != null) {
+                if (type instanceof final JavaType.Parameterized parameterized) {
                     return !parameterized.getType().getTypeParameters().isEmpty();
                 }
                 final JavaType.FullyQualified fullyQualified = TypeUtils.asFullyQualified(type);
@@ -706,19 +709,13 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
             }
 
             private String simpleNameOfTypeTree(final NameTree typeTree) {
-                if (typeTree == null) {
-                    return null;
-                }
-                if (typeTree instanceof final J.ParameterizedType parameterizedType) {
-                    return this.simpleNameOfTypeTree(parameterizedType.getClazz());
-                }
-                if (typeTree instanceof final J.Identifier identifier) {
-                    return identifier.getSimpleName();
-                }
-                if (typeTree instanceof final J.FieldAccess fieldAccess) {
-                    return fieldAccess.getSimpleName();
-                }
-                return null;
+                return switch (typeTree) {
+                    case final J.ParameterizedType parameterizedType ->
+                        this.simpleNameOfTypeTree(parameterizedType.getClazz());
+                    case final J.Identifier identifier -> identifier.getSimpleName();
+                    case final J.FieldAccess fieldAccess -> fieldAccess.getSimpleName();
+                    case null, default -> null;
+                };
             }
 
             private boolean isApiType(final JavaType type) {

@@ -35,10 +35,10 @@ public class RemoveSimpleItemWrapper extends Recipe {
                     TypeUtils.isOfClassType(n.getType(), RemoveSimpleItemWrapper.SIMPLE_ITEM) &&
                     n.getArguments().size() == 1 &&
                     TypeUtils.isOfClassType(n.getArguments().getFirst().getType(), RemoveSimpleItemWrapper.ITEM_STACK)) {
-                        final Expression innerArg = n.getArguments().getFirst();
-                        this.maybeRemoveImport(RemoveSimpleItemWrapper.SIMPLE_ITEM);
-                        return innerArg.withPrefix(n.getPrefix());
-                    }
+                    final Expression innerArg = n.getArguments().getFirst();
+                    this.maybeRemoveImport(RemoveSimpleItemWrapper.SIMPLE_ITEM);
+                    return innerArg.withPrefix(n.getPrefix());
+                }
 
                 return nc;
             }

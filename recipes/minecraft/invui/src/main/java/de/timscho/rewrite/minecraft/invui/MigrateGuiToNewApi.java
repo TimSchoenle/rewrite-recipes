@@ -36,8 +36,8 @@ public class MigrateGuiToNewApi extends Recipe {
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
         return new JavaIsoVisitor<>() {
             @Override
-            public J.MethodInvocation visitMethodInvocation(final J.MethodInvocation method, final ExecutionContext ctx) {
-                J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
+            public J.@NonNull MethodInvocation visitMethodInvocation(final J.@NonNull MethodInvocation method, final @NonNull ExecutionContext ctx) {
+                final J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
 
                 if (MigrateGuiToNewApi.GUI_FACTORY_NORMAL_NO_ARGS.matches(m)) {
                     return m.withName(m.getName().withSimpleName("builder"));
@@ -65,17 +65,17 @@ public class MigrateGuiToNewApi extends Recipe {
 
                 final Expression consumer = method.getArguments().getFirst();
                 return JavaTemplate.builder(
-                    """
-                    ((java.util.function.Supplier<xyz.xenondevs.invui.gui.Gui>) () -> {
-                        java.util.function.Consumer<xyz.xenondevs.invui.gui.Gui.Builder<?, ?>> consumer = #{any(java.util.function.Consumer)};
-                        xyz.xenondevs.invui.gui.Gui.Builder<?, ?> builder = xyz.xenondevs.invui.gui.Gui.builder();
-                        consumer.accept(builder);
-                        return builder.build();
-                    }).get()
-                    """
-                )
+                        """
+                            ((java.util.function.Supplier<xyz.xenondevs.invui.gui.Gui>) () -> {
+                                java.util.function.Consumer<xyz.xenondevs.invui.gui.Gui.Builder<?, ?>> consumer = #{any(java.util.function.Consumer)};
+                                xyz.xenondevs.invui.gui.Gui.Builder<?, ?> builder = xyz.xenondevs.invui.gui.Gui.builder();
+                                consumer.accept(builder);
+                                return builder.build();
+                            }).get()
+                            """
+                    )
                     .build()
-                    .apply(getCursor(), method.getCoordinates().replace(), consumer)
+                    .apply(this.getCursor(), method.getCoordinates().replace(), consumer)
                     .withPrefix(method.getPrefix());
             }
         };

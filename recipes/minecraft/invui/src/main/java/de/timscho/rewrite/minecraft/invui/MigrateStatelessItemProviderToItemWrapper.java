@@ -38,11 +38,11 @@ public class MigrateStatelessItemProviderToItemWrapper extends Recipe {
                     return nc;
                 }
 
-                final String newClassSource = n.printTrimmed(getCursor());
+                final String newClassSource = n.printTrimmed(this.getCursor());
                 final boolean isItemProviderAnonymousClass =
                     TypeUtils.isAssignableTo(MigrateStatelessItemProviderToItemWrapper.ITEM_PROVIDER, n.getType()) ||
-                    newClassSource.startsWith("new ItemProvider(") ||
-                    newClassSource.startsWith("new xyz.xenondevs.invui.item.ItemProvider(");
+                        newClassSource.startsWith("new ItemProvider(") ||
+                        newClassSource.startsWith("new xyz.xenondevs.invui.item.ItemProvider(");
                 if (!isItemProviderAnonymousClass) {
                     return nc;
                 }
@@ -77,12 +77,12 @@ public class MigrateStatelessItemProviderToItemWrapper extends Recipe {
                 }
 
                 this.maybeAddImport(MigrateStatelessItemProviderToItemWrapper.ITEM_WRAPPER);
-                doAfterVisit(new AddImport<>(MigrateStatelessItemProviderToItemWrapper.ITEM_WRAPPER, null, false));
+                this.doAfterVisit(new AddImport<>(MigrateStatelessItemProviderToItemWrapper.ITEM_WRAPPER, null, false));
                 this.maybeRemoveImport(MigrateStatelessItemProviderToItemWrapper.ITEM_PROVIDER);
                 return JavaTemplate.builder("new ItemWrapper(#{any()})")
                     .imports(MigrateStatelessItemProviderToItemWrapper.ITEM_WRAPPER)
                     .build()
-                    .apply(getCursor(), n.getCoordinates().replace(), returnedExpression)
+                    .apply(this.getCursor(), n.getCoordinates().replace(), returnedExpression)
                     .withPrefix(n.getPrefix());
             }
 
