@@ -18,6 +18,7 @@ jobs:
     environment: publish
     outputs:
       catalog_release_created: ${{ steps.release.outputs['catalog--release_created'] }}
+      recipes_minecraft_invui_release_created: ${{ steps.release.outputs['recipes/minecraft/invui--release_created'] }}
     permissions:
       contents: write # to create release tags/commits
       issues: write # to comment on release issues
@@ -65,6 +66,37 @@ jobs:
 
       - name: Publish to Maven Central
         run: ./gradlew :catalog:publishToMavenCentral
+        env:
+          CI: true
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
+
+  publish-recipes-minecraft-invui-to-maven-central:
+    name: Publish recipes/minecraft/invui to Maven Central
+    needs: release-please
+    if: ${{ needs.release-please.outputs.recipes_minecraft_invui_release_created }}
+    runs-on: ubuntu-latest
+    environment: publish
+    permissions:
+      contents: read # to fetch code
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@6c3c2f2c1c457b00c10c4848d6f5491db3b629df # v2.18.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Base Environment
+        uses: ./.github/actions/setup-base-environment
+
+      - name: Publish to Maven Central
+        run: ./gradlew :recipes:minecraft:invui:publishToMavenCentral
         env:
           CI: true
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
