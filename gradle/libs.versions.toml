@@ -1,5 +1,5 @@
 [versions]
-rewrite-recipe-bom = "3.30.1"
+rewrite-recipe-bom = "3.31.0"
 
 # Plugins
 lombok = "9.5.0"
