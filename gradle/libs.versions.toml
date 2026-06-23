@@ -3,7 +3,7 @@ rewrite-recipe-bom = "3.31.0"
 
 # Plugins
 lombok = "9.5.0"
-spotless = "8.6.0"
+spotless = "8.7.0"
 maven-publish = "0.36.0"
 
 [libraries]
