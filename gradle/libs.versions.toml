@@ -4,7 +4,7 @@ rewrite-recipe-bom = "3.33.0"
 # Plugins
 lombok = "9.5.0"
 spotless = "8.7.0"
-maven-publish = "0.36.0"
+maven-publish = "0.37.0"
 
 [libraries]
 maven-publish = { module =  "com.vanniktech:gradle-maven-publish-plugin", version.ref = "maven-publish" }
