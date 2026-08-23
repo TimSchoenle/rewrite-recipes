@@ -14,18 +14,18 @@ plus one `extra` object the same workflow produces:
 Nothing in this comment may contain a mustache that is not a real reference.
 -->
 
-# rewrite-recipes
+# {{ repo.name }}
 
-OpenRewrite recipes for Java static analysis and InvUI 1.x to 2.x migration, published as one catalog.
+{{ repo.description }}
 
-[![Version](https://img.shields.io/maven-central/v/de.timscho.rewrite/catalog?label=maven%20central)](https://central.sonatype.com/artifact/de.timscho.rewrite/catalog)
-[![Build](https://img.shields.io/github/actions/workflow/status/TimSchoenle/rewrite-recipes/ci.yaml?branch=main)](https://github.com/TimSchoenle/rewrite-recipes/actions/workflows/ci.yaml)
-[![License](https://img.shields.io/github/license/TimSchoenle/rewrite-recipes)](LICENSE)
-[![JDK](https://img.shields.io/badge/jdk-21-orange)](https://openjdk.org)
+[![Version](https://img.shields.io/maven-central/v/{{ replace repo.package ":" "/" }}?label=maven%20central)](https://central.sonatype.com/artifact/{{ replace repo.package ":" "/" }})
+[![Build](https://img.shields.io/github/actions/workflow/status/{{ repo.slug }}/ci.yaml?branch={{ repo.branch }})]({{ repo.url }}/actions/workflows/ci.yaml)
+[![License](https://img.shields.io/github/license/{{ repo.slug }})](LICENSE)
+[![JDK](https://img.shields.io/badge/jdk-{{ toolchain.jdk }}-orange)](https://openjdk.org)
 
 ## What this is
 
-OpenRewrite recipes, published to Maven Central as `de.timscho.rewrite:catalog`.
+OpenRewrite recipes, published to Maven Central as `{{ repo.package }}`.
 
 The catalog is the only coordinate you write down. It carries two recipes as YAML and pulls in
 `recipes-minecraft-invui`, the Java module holding the visitors one of them calls.
@@ -48,7 +48,7 @@ rewrite {
 }
 
 dependencies {
-    rewrite("de.timscho.rewrite:catalog:0.2.0")
+    rewrite("{{ repo.package }}:{{ release.version }}")
 }
 ```
 
@@ -101,7 +101,7 @@ repositories {
 }
 
 dependencies {
-    rewrite("de.timscho.rewrite:catalog:0.2.0")
+    rewrite("{{ repo.package }}:{{ release.version }}")
 }
 ```
 
@@ -114,7 +114,7 @@ Trying a recipe needs no POM edit. Maven resolves the plugin's own latest releas
 
 ```bash
 mvn -U org.openrewrite.maven:rewrite-maven-plugin:run \
-  -Drewrite.recipeArtifactCoordinates=de.timscho.rewrite:catalog:0.2.0 \
+  -Drewrite.recipeArtifactCoordinates={{ repo.package }}:{{ release.version }} \
   -Drewrite.activeRecipes=de.timscho.rewrite.Style
 ```
 
@@ -182,7 +182,7 @@ puts every name above on the classpath. [docs/RECIPES.md](docs/RECIPES.md) spell
 
 | | Supported |
 | --- | --- |
-| JDK | 21 and later |
+| JDK | {{ toolchain.jdk }} and later |
 | OpenRewrite | built against `org.openrewrite.recipe:rewrite-recipe-bom` 3.x |
 | Build tools | Gradle with `org.openrewrite.rewrite`, Maven with `rewrite-maven-plugin` |
 | Target library | InvUI 2.x, for the migration recipes |
@@ -191,7 +191,8 @@ puts every name above on the classpath. [docs/RECIPES.md](docs/RECIPES.md) spell
 
 | Document | Purpose |
 | --- | --- |
-| [docs/RECIPES.md](docs/RECIPES.md) | Every recipe this repository publishes, by the name you pass to activeRecipe. |
+{{#each docs}}| [{{ path }}]({{ path }}) | {{ default (mdCell summary) "Reference" }} |
+{{/each}}
 
 ## Contributing
 
@@ -208,8 +209,8 @@ README.md is generated. Edit `.github/templates/README.md.hbs` and let CI render
 ## Security
 
 Do not open a public issue for a vulnerability. Report it through
-[GitHub's private advisory form](https://github.com/TimSchoenle/rewrite-recipes/security/advisories/new).
+[GitHub's private advisory form]({{ repo.url }}/security/advisories/new).
 
 ## License
 
-`Apache-2.0`. [LICENSE](LICENSE) has the terms.
+`{{ repo.license }}`. [LICENSE](LICENSE) has the terms.

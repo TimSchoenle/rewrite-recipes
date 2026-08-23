@@ -13,7 +13,8 @@
             "component": "catalog",
             "pull-request-title-pattern": "chore: release catalog v${version}",
             "extra-files": [
-                "build.gradle.kts"
+                "build.gradle.kts",
+                "/gradle.properties"
             ]
         },
         "recipes/minecraft/invui": {
