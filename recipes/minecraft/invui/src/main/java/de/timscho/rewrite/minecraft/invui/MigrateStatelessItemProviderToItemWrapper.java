@@ -14,9 +14,24 @@ import org.openrewrite.java.tree.TypeUtils;
 
 import java.util.List;
 
+/**
+ * Replaces an anonymous {@code ItemProvider} with {@code new ItemWrapper(...)} when its {@code get}
+ * ignores the language it is handed.
+ *
+ * <p>The class has to hold exactly one single-argument {@code get}, its body has to be one
+ * {@code return}, and the returned expression must not mention the parameter. A provider that reads
+ * the language is per-locale, and an {@code ItemWrapper} answers every locale with the same stack.
+ *
+ * @implNote The parameter check matches identifiers by simple name, so a field sharing the
+ *           parameter's name blocks the rewrite. That is the safe direction to be wrong in.
+ */
 public class MigrateStatelessItemProviderToItemWrapper extends Recipe {
     private static final String ITEM_PROVIDER = "xyz.xenondevs.invui.item.ItemProvider";
     private static final String ITEM_WRAPPER = "xyz.xenondevs.invui.item.ItemWrapper";
+
+    /** Creates the recipe. */
+    public MigrateStatelessItemProviderToItemWrapper() {
+    }
 
     @Override
     public @NonNull String getDisplayName() {

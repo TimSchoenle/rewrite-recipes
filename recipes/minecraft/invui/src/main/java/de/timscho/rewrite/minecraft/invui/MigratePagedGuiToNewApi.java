@@ -9,6 +9,12 @@ import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.marker.SearchResult;
 
+/**
+ * Renames the five {@code PagedGui} members 2.x kept and marks the rest for manual follow-up.
+ *
+ * <p>Nothing whose argument or return shape changed is rewritten. Each marker names the 2.x shape
+ * the call has to move to.
+ */
 public class MigratePagedGuiToNewApi extends Recipe {
     private static final String PAGED_GUI = "xyz.xenondevs.invui.gui.PagedGui";
 
@@ -48,6 +54,10 @@ public class MigratePagedGuiToNewApi extends Recipe {
         new MethodMatcher(MigratePagedGuiToNewApi.PAGED_GUI + " getContentListSlots()");
     private static final MethodMatcher PAGED_GUI_BUILDER_ADD_CONTENT =
         new MethodMatcher(MigratePagedGuiToNewApi.PAGED_GUI + "$Builder addContent(..)");
+
+    /** Creates the recipe. */
+    public MigratePagedGuiToNewApi() {
+    }
 
     @Override
     public @NonNull String getDisplayName() {

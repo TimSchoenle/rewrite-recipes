@@ -8,8 +8,16 @@ import org.openrewrite.java.ChangeMethodName;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.tree.J;
 
+/**
+ * Renames the four {@code Click} getters to the accessors of the 2.x record, with
+ * {@code getClick} and {@code getClickType} landing on the same one.
+ */
 public class MigrateClickGettersToRecordAccessors extends Recipe {
     private static final String CLICK = "xyz.xenondevs.invui.Click";
+
+    /** Creates the recipe. */
+    public MigrateClickGettersToRecordAccessors() {
+    }
 
     @Override
     public @NonNull String getDisplayName() {

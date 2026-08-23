@@ -13,6 +13,18 @@ import org.openrewrite.java.tree.J;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Rewrites the {@code ScrollGui} consumer factories onto builders and the {@code int[]} content
+ * list slots onto {@code List<Slot>}.
+ *
+ * <p>Each index becomes {@code new Slot(slot % width, slot / width)}, which assumes row-major
+ * indexing, and the migrated call gains {@code LineOrientation.HORIZONTAL} because the 1.x
+ * signature carries no orientation to hand over. A layout needing the other orientation has to be
+ * corrected by hand.
+ *
+ * @implNote The width argument is printed into the generated lambda twice, once per coordinate, so
+ *           a width expression with side effects runs twice per slot.
+ */
 public class MigrateScrollGuiToNewApi extends Recipe {
     private static final String SCROLL_GUI = "xyz.xenondevs.invui.gui.ScrollGui";
 
@@ -33,6 +45,10 @@ public class MigrateScrollGuiToNewApi extends Recipe {
         new MethodMatcher(MigrateScrollGuiToNewApi.SCROLL_GUI + " ofGuis(int, int, java.util.List, int[])");
     private static final MethodMatcher SCROLL_GUI_OF_INVENTORIES_WITH_INT_SLOTS =
         new MethodMatcher(MigrateScrollGuiToNewApi.SCROLL_GUI + " ofInventories(int, int, java.util.List, int[])");
+
+    /** Creates the recipe. */
+    public MigrateScrollGuiToNewApi() {
+    }
 
     @Override
     public @NonNull String getDisplayName() {

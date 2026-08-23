@@ -15,12 +15,28 @@ import org.openrewrite.java.tree.TypeUtils;
 
 import java.util.List;
 
+/**
+ * Moves {@code Item#getItemProvider()} call sites onto the 2.x player-aware overload and bridges
+ * the no-arg implementations left behind.
+ *
+ * <p>Call sites are handed {@code (Player) null} as the viewer, and the generated bridge ignores
+ * its viewer and delegates to the 1.x body. Both keep the code compiling without deciding what a
+ * per-viewer provider should return.
+ *
+ * <p>The {@code @Override} on the no-arg declaration goes, because 2.x has nothing left for it to
+ * override. Invocations inside the bridge are skipped, or the bridge would rewrite into a call to
+ * itself.
+ */
 public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
     private static final String ITEM = "xyz.xenondevs.invui.item.Item";
     private static final String ITEM_PROVIDER = "xyz.xenondevs.invui.item.ItemProvider";
     private static final String PLAYER = "org.bukkit.entity.Player";
     private static final MethodMatcher ITEM_GET_ITEM_PROVIDER_NO_ARGS =
         new MethodMatcher(MigrateItemGetItemProviderToPlayerApi.ITEM + " getItemProvider()");
+
+    /** Creates the recipe. */
+    public MigrateItemGetItemProviderToPlayerApi() {
+    }
 
     @Override
     public @NonNull String getDisplayName() {

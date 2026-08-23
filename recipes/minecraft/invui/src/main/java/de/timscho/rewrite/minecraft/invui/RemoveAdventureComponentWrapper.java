@@ -9,8 +9,18 @@ import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.TypeUtils;
 
+/**
+ * Unwraps {@code new AdventureComponentWrapper(component)} to the component it wraps.
+ *
+ * <p>The argument is not type-checked, unlike {@link RemoveSimpleItemWrapper}: any single-argument
+ * construction of the wrapper is unwrapped.
+ */
 public class RemoveAdventureComponentWrapper extends Recipe {
     private static final String ADVENTURE_COMPONENT_WRAPPER = "xyz.xenondevs.inventoryaccess.component.AdventureComponentWrapper";
+
+    /** Creates the recipe. */
+    public RemoveAdventureComponentWrapper() {
+    }
 
     @Override
     public @NonNull String getDisplayName() {

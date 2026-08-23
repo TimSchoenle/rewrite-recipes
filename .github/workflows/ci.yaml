@@ -39,4 +39,6 @@ jobs:
           java_version: ${{ matrix.java_version }}
 
       - name: Verify Recipes and Catalog
-        run: ./gradlew --no-daemon clean test :catalog:jar
+        # `test` does not run `javadoc`, so the javadoc half of the doclint gate in
+        # buildSrc/src/main/kotlin/rewrite.java-conventions.gradle.kts only runs if it is named.
+        run: ./gradlew --no-daemon clean test javadoc :catalog:jar

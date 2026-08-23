@@ -10,6 +10,13 @@ import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 
+/**
+ * Renames the three {@code Gui} members that kept their meaning across InvUI 1.x and 2.x.
+ *
+ * <p>{@code normal(Consumer)} did not, and is replaced by an immediately invoked supplier that
+ * applies the consumer to {@code Gui.builder()}. A rename would have left the consumer sitting in
+ * the argument list of a factory that no longer takes one.
+ */
 public class MigrateGuiToNewApi extends Recipe {
     private static final String GUI = "xyz.xenondevs.invui.gui.Gui";
 
@@ -21,6 +28,10 @@ public class MigrateGuiToNewApi extends Recipe {
         new MethodMatcher(MigrateGuiToNewApi.GUI + " findAllWindows()");
     private static final MethodMatcher GUI_FIND_ALL_CURRENT_VIEWERS =
         new MethodMatcher(MigrateGuiToNewApi.GUI + " findAllCurrentViewers()");
+
+    /** Creates the recipe. */
+    public MigrateGuiToNewApi() {
+    }
 
     @Override
     public @NonNull String getDisplayName() {
