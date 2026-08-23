@@ -50,7 +50,8 @@ jobs:
         run: |
           set -euo pipefail
           license="$(sed -n 's/^license=//p' gradle.properties | head -n 1)"
-          echo "json=$(jq -nc --arg license "$license" '{ repo: { license: $license } }')" >> "$GITHUB_OUTPUT"
+          json="$(jq -nc --arg license "$license" '{ repo: { license: $license } }')"
+          echo "json=${json}" >> "$GITHUB_OUTPUT"
 
       - name: Collect the README payload
         id: variables
@@ -91,7 +92,8 @@ jobs:
         run: |
           set -euo pipefail
           license="$(sed -n 's/^license=//p' gradle.properties | head -n 1)"
-          echo "json=$(jq -nc --arg license "$license" '{ repo: { license: $license } }')" >> "$GITHUB_OUTPUT"
+          json="$(jq -nc --arg license "$license" '{ repo: { license: $license } }')"
+          echo "json=${json}" >> "$GITHUB_OUTPUT"
 
       - name: Collect the README payload
         id: variables
