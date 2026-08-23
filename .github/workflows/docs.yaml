@@ -35,6 +35,9 @@ jobs:
         with:
           app-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
           private-key: ${{ secrets.ACTIONS_MAINTENANCE_PRIVATE_KEY }}
+          # Narrowed to the one permission the render commit needs. An unscoped token inherits every
+          # permission the installation holds, which zizmor's `github-app` rule reports as an error.
+          permission-contents: write
 
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
