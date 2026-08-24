@@ -16,6 +16,20 @@ import org.openrewrite.marker.SearchResult;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Renames the {@code Window} and {@code Window.Builder} members 2.x kept, and marks the factory
+ * {@code Consumer} overloads it removed.
+ *
+ * <p>Two type moves ride along, {@code ComponentWrapper} to Adventure's {@code Component} and
+ * {@code InventoryClickEvent} to {@code ClickEvent}, and both are applied only to files that call a
+ * {@code Window} method. {@code InventoryClickEvent} is a Bukkit type a plugin also uses for its
+ * own listeners, and rewriting it everywhere would retype code InvUI never touched.
+ *
+ * <p>{@code setGui} becomes {@code setUpperGui} except on the merged builder hierarchy, which kept
+ * the 1.x name, and a {@code Runnable} close handler is wrapped in a lambda discarding the close
+ * reason 2.x added. {@code changeTitle} becomes {@code setTitle} for every argument except a
+ * {@code BaseComponent[]}, which is left untouched for a human to decide on.
+ */
 public class MigrateWindowToNewApi extends Recipe {
     private static final String WINDOW = "xyz.xenondevs.invui.window.Window";
     private static final String WINDOW_BUILDER = MigrateWindowToNewApi.WINDOW + "$Builder";
@@ -40,6 +54,10 @@ public class MigrateWindowToNewApi extends Recipe {
     private static final MethodMatcher WINDOW_BUILDER_SET_GUI = new MethodMatcher(MigrateWindowToNewApi.WINDOW_BUILDER + " setGui(..)");
     private static final MethodMatcher WINDOW_ADD_CLOSE_HANDLER = new MethodMatcher(MigrateWindowToNewApi.WINDOW + " addCloseHandler(java.lang.Runnable)");
     private static final MethodMatcher WINDOW_BUILDER_ADD_CLOSE_HANDLER = new MethodMatcher(MigrateWindowToNewApi.WINDOW_BUILDER + " addCloseHandler(java.lang.Runnable)");
+
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
+    public MigrateWindowToNewApi() {
+    }
 
     @Override
     public @NonNull String getDisplayName() {

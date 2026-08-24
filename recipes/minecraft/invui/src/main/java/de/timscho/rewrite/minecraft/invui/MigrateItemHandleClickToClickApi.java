@@ -17,12 +17,28 @@ import org.openrewrite.java.tree.TypeUtils;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Retypes the third parameter of {@code handleClick} from {@code InventoryClickEvent} to
+ * {@code Click}, and fixes the bodies and call sites that go with it.
+ *
+ * <p>A call site is rebuilt as {@code new Click(player, clickType, event.getHotbarButton())},
+ * reusing the call's own first two arguments and reading only the hotbar button off the event.
+ * Anything else the body read off the event has no source on {@code Click} and stops compiling.
+ *
+ * <p>Inside the method, {@code getWhoClicked}, {@code getClick} and {@code getHotbarButton} are
+ * rewritten only where the receiver is the identifier naming the third parameter. Another event in
+ * scope is left as it is.
+ */
 public class MigrateItemHandleClickToClickApi extends Recipe {
     private static final String ITEM = "xyz.xenondevs.invui.item.Item";
     private static final String CLICK_TYPE = "org.bukkit.event.inventory.ClickType";
     private static final String PLAYER = "org.bukkit.entity.Player";
     private static final String INVENTORY_CLICK_EVENT = "org.bukkit.event.inventory.InventoryClickEvent";
     private static final String CLICK = "xyz.xenondevs.invui.Click";
+
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
+    public MigrateItemHandleClickToClickApi() {
+    }
 
     @Override
     public @NonNull String getDisplayName() {

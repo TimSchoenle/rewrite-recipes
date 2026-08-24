@@ -16,12 +16,26 @@ import org.openrewrite.java.tree.TypeUtils;
 
 import java.util.List;
 
+/**
+ * Moves {@code ItemProvider#get(String)} call sites onto {@code Locale} and gives legacy providers
+ * the two overloads 2.x expects.
+ *
+ * <p>Null survives the trip in both directions. The call site wraps its argument in an
+ * {@code Optional} so a null language stays null, a literal {@code null} is left unwrapped, and the
+ * generated {@code get(Locale)} converts back through {@code toLanguageTag()} before calling the
+ * 1.x body. A provider that parsed the raw string itself keeps working only for strings that were
+ * valid language tags.
+ */
 public class MigrateItemProviderStringGetToLocaleApi extends Recipe {
     private static final String ITEM_PROVIDER = "xyz.xenondevs.invui.item.ItemProvider";
     private static final String STRING = "java.lang.String";
     private static final String LOCALE = "java.util.Locale";
     private static final MethodMatcher ITEM_PROVIDER_GET_WITH_STRING =
         new MethodMatcher(MigrateItemProviderStringGetToLocaleApi.ITEM_PROVIDER + " get(java.lang.String)");
+
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
+    public MigrateItemProviderStringGetToLocaleApi() {
+    }
 
     @Override
     public @NonNull String getDisplayName() {

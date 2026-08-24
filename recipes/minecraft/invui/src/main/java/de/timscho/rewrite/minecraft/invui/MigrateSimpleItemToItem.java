@@ -11,11 +11,23 @@ import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.TypeUtils;
 
+/**
+ * Rewrites {@code new SimpleItem(providerOrStack)} to {@code Item.simple(...)}, and the
+ * click-handler overload to an {@code Item.builder()} chain.
+ *
+ * <p>The first argument is substituted through {@code #{any(type)}}, which needs a resolved type
+ * name, so a constructor whose first argument is neither an {@code ItemStack} nor an
+ * {@code ItemProvider} is left alone.
+ */
 public class MigrateSimpleItemToItem extends Recipe {
     private static final String SIMPLE_ITEM = "xyz.xenondevs.invui.item.impl.SimpleItem";
     private static final String ITEM = "xyz.xenondevs.invui.item.Item";
     private static final String ITEM_STACK = "org.bukkit.inventory.ItemStack";
     private static final String ITEM_PROVIDER = "xyz.xenondevs.invui.item.ItemProvider";
+
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
+    public MigrateSimpleItemToItem() {
+    }
 
     @Override
     public @NonNull String getDisplayName() {

@@ -21,6 +21,23 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Rewrites {@code ControlItem} subclasses onto {@code AbstractBoundItem}, including the type
+ * parameter 2.x removed.
+ *
+ * <p>1.x declared {@code ControlItem<G extends Gui>} with a {@code G getGui()}; 2.x returns a plain
+ * {@code Gui}. The parameter is stripped from the declaration, from the {@code extends} clause and
+ * from every use, and the subclass gains a covariant {@code getGui()} that casts what
+ * {@code super.getGui()} returns, so the pairing is now a run-time cast rather than a type.
+ *
+ * <p>{@code setGui} becomes {@code bind}, and a {@code getItemProvider(SomeGui)} override is
+ * bridged by a {@code getItemProvider(Player)} that ignores its viewer, the same shape and the same
+ * caveat as {@link MigrateItemGetItemProviderToPlayerApi}.
+ *
+ * @implNote The hierarchy, the declared type parameters and the {@code Gui} argument are each
+ *           recovered from the printed source and from sibling classes in the same compilation
+ *           unit when {@code TypeUtils} cannot answer, which is what most of the code below is.
+ */
 public class MigrateControlItemToAbstractBoundItem extends Recipe {
     private static final String CONTROL_ITEM = "xyz.xenondevs.invui.item.impl.controlitem.ControlItem";
     private static final String ABSTRACT_BOUND_ITEM = "xyz.xenondevs.invui.item.AbstractBoundItem";
@@ -30,6 +47,10 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
 
     private static final MethodMatcher CONTROL_ITEM_SET_GUI = new MethodMatcher(MigrateControlItemToAbstractBoundItem.CONTROL_ITEM + " setGui(..)");
     private static final MethodMatcher CONTROL_ITEM_GET_ITEM_PROVIDER = new MethodMatcher(MigrateControlItemToAbstractBoundItem.CONTROL_ITEM + " getItemProvider(..)");
+
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
+    public MigrateControlItemToAbstractBoundItem() {
+    }
 
     @Override
     public @NonNull String getDisplayName() {
