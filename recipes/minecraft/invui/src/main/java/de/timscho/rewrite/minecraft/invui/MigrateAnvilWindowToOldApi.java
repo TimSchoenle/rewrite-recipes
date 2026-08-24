@@ -17,9 +17,8 @@ import org.openrewrite.java.tree.TypeUtils;
  * {@code single()}. The forward {@code FactoryAndAccessorRenames} phase collapsed both onto
  * {@code builder()} and nothing in the 2.x call records which one it was.
  *
- * <p>This is the only recipe in the package that runs 2.x to 1.x, and it is deliberately absent
- * from {@code de.timscho.rewrite.minecraft.invui.v1-to-v2.CustomVisitors}, where it would undo that
- * phase in the same run.
+ * <p>It is absent from {@code de.timscho.rewrite.minecraft.invui.v1-to-v2.CustomVisitors}, where it
+ * would undo that phase in the same run.
  */
 public class MigrateAnvilWindowToOldApi extends Recipe {
     private static final String ANVIL_WINDOW = "xyz.xenondevs.invui.window.AnvilWindow";
@@ -30,7 +29,7 @@ public class MigrateAnvilWindowToOldApi extends Recipe {
     private static final MethodMatcher ANVIL_WINDOW_BUILDER_SET_UPPER_GUI =
         new MethodMatcher(MigrateAnvilWindowToOldApi.ANVIL_WINDOW_BUILDER + " setUpperGui(..)");
 
-    /** Creates the recipe. */
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
     public MigrateAnvilWindowToOldApi() {
     }
 

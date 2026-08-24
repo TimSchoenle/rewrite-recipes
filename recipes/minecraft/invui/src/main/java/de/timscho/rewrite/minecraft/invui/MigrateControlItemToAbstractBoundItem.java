@@ -48,7 +48,7 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
     private static final MethodMatcher CONTROL_ITEM_SET_GUI = new MethodMatcher(MigrateControlItemToAbstractBoundItem.CONTROL_ITEM + " setGui(..)");
     private static final MethodMatcher CONTROL_ITEM_GET_ITEM_PROVIDER = new MethodMatcher(MigrateControlItemToAbstractBoundItem.CONTROL_ITEM + " getItemProvider(..)");
 
-    /** Creates the recipe. */
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
     public MigrateControlItemToAbstractBoundItem() {
     }
 

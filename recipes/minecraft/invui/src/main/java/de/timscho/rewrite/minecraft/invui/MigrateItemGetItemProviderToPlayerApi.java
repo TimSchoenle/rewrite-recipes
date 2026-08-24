@@ -34,7 +34,7 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
     private static final MethodMatcher ITEM_GET_ITEM_PROVIDER_NO_ARGS =
         new MethodMatcher(MigrateItemGetItemProviderToPlayerApi.ITEM + " getItemProvider()");
 
-    /** Creates the recipe. */
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
     public MigrateItemGetItemProviderToPlayerApi() {
     }
 

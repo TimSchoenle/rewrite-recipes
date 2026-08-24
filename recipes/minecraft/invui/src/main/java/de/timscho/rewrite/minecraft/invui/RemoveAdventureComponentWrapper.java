@@ -12,13 +12,13 @@ import org.openrewrite.java.tree.TypeUtils;
 /**
  * Unwraps {@code new AdventureComponentWrapper(component)} to the component it wraps.
  *
- * <p>The argument is not type-checked, unlike {@link RemoveSimpleItemWrapper}: any single-argument
- * construction of the wrapper is unwrapped.
+ * <p>Any single-argument construction of the wrapper is unwrapped, without the argument type check
+ * {@link RemoveSimpleItemWrapper} applies.
  */
 public class RemoveAdventureComponentWrapper extends Recipe {
     private static final String ADVENTURE_COMPONENT_WRAPPER = "xyz.xenondevs.inventoryaccess.component.AdventureComponentWrapper";
 
-    /** Creates the recipe. */
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
     public RemoveAdventureComponentWrapper() {
     }
 

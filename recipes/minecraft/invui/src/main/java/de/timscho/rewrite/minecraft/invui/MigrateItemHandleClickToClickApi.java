@@ -36,7 +36,7 @@ public class MigrateItemHandleClickToClickApi extends Recipe {
     private static final String INVENTORY_CLICK_EVENT = "org.bukkit.event.inventory.InventoryClickEvent";
     private static final String CLICK = "xyz.xenondevs.invui.Click";
 
-    /** Creates the recipe. */
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
     public MigrateItemHandleClickToClickApi() {
     }
 

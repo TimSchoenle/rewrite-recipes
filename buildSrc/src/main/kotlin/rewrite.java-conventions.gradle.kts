@@ -35,8 +35,9 @@ tasks.withType<Javadoc>().configureEach {
         memberLevel = JavadocMemberLevel.PROTECTED
         addStringOption("Xdoclint:all", "-quiet")
         addBooleanOption("Werror", true)
-        // The standard doclet only knows these three outside the JDK's own build, and doclint
-        // rejects an unknown tag outright once -Werror is on.
+        // The standard doclet does not know `@apiNote`, `@implSpec` or `@implNote` outside the
+        // JDK's own build, and an unregistered block tag is a javadoc error rather than a
+        // warning, so `-Werror` above is not what makes it fail.
         tags(
             "apiNote:a:API Note:",
             "implSpec:a:Implementation Requirements:",

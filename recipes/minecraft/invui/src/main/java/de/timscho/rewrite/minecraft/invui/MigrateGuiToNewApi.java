@@ -29,7 +29,7 @@ public class MigrateGuiToNewApi extends Recipe {
     private static final MethodMatcher GUI_FIND_ALL_CURRENT_VIEWERS =
         new MethodMatcher(MigrateGuiToNewApi.GUI + " findAllCurrentViewers()");
 
-    /** Creates the recipe. */
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
     public MigrateGuiToNewApi() {
     }
 

@@ -23,13 +23,13 @@ import java.util.List;
  * the language is per-locale, and an {@code ItemWrapper} answers every locale with the same stack.
  *
  * @implNote The parameter check matches identifiers by simple name, so a field sharing the
- *           parameter's name blocks the rewrite. That is the safe direction to be wrong in.
+ *           parameter's name blocks the rewrite.
  */
 public class MigrateStatelessItemProviderToItemWrapper extends Recipe {
     private static final String ITEM_PROVIDER = "xyz.xenondevs.invui.item.ItemProvider";
     private static final String ITEM_WRAPPER = "xyz.xenondevs.invui.item.ItemWrapper";
 
-    /** Creates the recipe. */
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
     public MigrateStatelessItemProviderToItemWrapper() {
     }
 

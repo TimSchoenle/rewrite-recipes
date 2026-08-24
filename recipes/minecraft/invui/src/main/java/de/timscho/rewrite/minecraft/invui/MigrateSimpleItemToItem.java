@@ -25,7 +25,7 @@ public class MigrateSimpleItemToItem extends Recipe {
     private static final String ITEM_STACK = "org.bukkit.inventory.ItemStack";
     private static final String ITEM_PROVIDER = "xyz.xenondevs.invui.item.ItemProvider";
 
-    /** Creates the recipe. */
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
     public MigrateSimpleItemToItem() {
     }
 

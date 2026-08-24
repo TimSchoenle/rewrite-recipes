@@ -15,7 +15,7 @@ import org.openrewrite.java.tree.J;
 public class MigrateClickGettersToRecordAccessors extends Recipe {
     private static final String CLICK = "xyz.xenondevs.invui.Click";
 
-    /** Creates the recipe. */
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
     public MigrateClickGettersToRecordAccessors() {
     }
 

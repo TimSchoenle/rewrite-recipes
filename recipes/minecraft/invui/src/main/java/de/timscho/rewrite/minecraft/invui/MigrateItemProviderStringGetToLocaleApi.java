@@ -33,7 +33,7 @@ public class MigrateItemProviderStringGetToLocaleApi extends Recipe {
     private static final MethodMatcher ITEM_PROVIDER_GET_WITH_STRING =
         new MethodMatcher(MigrateItemProviderStringGetToLocaleApi.ITEM_PROVIDER + " get(java.lang.String)");
 
-    /** Creates the recipe. */
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
     public MigrateItemProviderStringGetToLocaleApi() {
     }
 

@@ -55,7 +55,7 @@ public class MigrateWindowToNewApi extends Recipe {
     private static final MethodMatcher WINDOW_ADD_CLOSE_HANDLER = new MethodMatcher(MigrateWindowToNewApi.WINDOW + " addCloseHandler(java.lang.Runnable)");
     private static final MethodMatcher WINDOW_BUILDER_ADD_CLOSE_HANDLER = new MethodMatcher(MigrateWindowToNewApi.WINDOW_BUILDER + " addCloseHandler(java.lang.Runnable)");
 
-    /** Creates the recipe. */
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
     public MigrateWindowToNewApi() {
     }
 

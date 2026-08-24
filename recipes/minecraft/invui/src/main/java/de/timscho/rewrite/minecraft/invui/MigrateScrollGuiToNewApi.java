@@ -46,7 +46,7 @@ public class MigrateScrollGuiToNewApi extends Recipe {
     private static final MethodMatcher SCROLL_GUI_OF_INVENTORIES_WITH_INT_SLOTS =
         new MethodMatcher(MigrateScrollGuiToNewApi.SCROLL_GUI + " ofInventories(int, int, java.util.List, int[])");
 
-    /** Creates the recipe. */
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
     public MigrateScrollGuiToNewApi() {
     }
 

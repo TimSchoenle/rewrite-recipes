@@ -23,9 +23,9 @@
  * <p>{@code MethodMatcher} parses its pattern in its constructor and a recipe visits every source
  * file in the repository it runs over, so the matchers are static constants.
  *
- * <p>Twelve of the fourteen are composed by
- * {@code de.timscho.rewrite.minecraft.invui.v1-to-v2.CustomVisitors}. The other two run only when
- * named on their own: {@link de.timscho.rewrite.minecraft.invui.RemoveSimpleItemWrapper}, and
+ * <p>Every recipe here is composed by
+ * {@code de.timscho.rewrite.minecraft.invui.v1-to-v2.CustomVisitors} except two, which run only
+ * when named on their own: {@link de.timscho.rewrite.minecraft.invui.RemoveSimpleItemWrapper}, and
  * {@link de.timscho.rewrite.minecraft.invui.MigrateAnvilWindowToOldApi}, which goes the other
  * direction and rewrites 2.x back to 1.x.
  */

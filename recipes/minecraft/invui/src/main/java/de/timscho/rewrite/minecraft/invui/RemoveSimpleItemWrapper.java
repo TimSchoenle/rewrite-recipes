@@ -21,7 +21,7 @@ public class RemoveSimpleItemWrapper extends Recipe {
     private static final String SIMPLE_ITEM = "xyz.xenondevs.invui.item.impl.SimpleItem";
     private static final String ITEM_STACK = "org.bukkit.inventory.ItemStack";
 
-    /** Creates the recipe. */
+    /** Creates the recipe; OpenRewrite constructs it reflectively from the catalog. */
     public RemoveSimpleItemWrapper() {
     }
 
