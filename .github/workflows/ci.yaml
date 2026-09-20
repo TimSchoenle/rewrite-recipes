@@ -34,7 +34,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Base Environment
-        uses: ./.github/actions/setup-base-environment
+        uses: $/.github/actions/setup-base-environment
         with:
           java_version: ${{ matrix.java_version }}
 
