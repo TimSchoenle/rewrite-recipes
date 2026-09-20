@@ -62,7 +62,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Base Environment
-        uses: ./.github/actions/setup-base-environment
+        uses: $/.github/actions/setup-base-environment
 
       - name: Publish to Maven Central
         run: ./gradlew :catalog:publishToMavenCentral
@@ -93,7 +93,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Base Environment
-        uses: ./.github/actions/setup-base-environment
+        uses: $/.github/actions/setup-base-environment
 
       - name: Publish to Maven Central
         run: ./gradlew :recipes:minecraft:invui:publishToMavenCentral
