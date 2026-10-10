@@ -5,11 +5,13 @@ CI renders it on every pull request and commits the result back to the branch. A
 whose README.md does not match its template fails the `README` job in
 .github/workflows/docs.yaml.
 
-Every version, coordinate and identifier below comes from the payload that
+This project's coordinates, version, licence and JDK below come from the payload that
 TimSchoenle/actions/actions/common/readme-variables builds out of gradle.properties and docs/,
 plus one `extra` object the same workflow produces:
 
     jq -nc --arg license "$(sed -n 's/^license=//p' gradle.properties)" '{ repo: { license: $license } }'
+
+Recipe names and the `org.openrewrite.rewrite` plugin version in the examples are typed here.
 
 Nothing in this comment may contain a mustache that is not a real reference.
 -->
@@ -191,7 +193,7 @@ puts every name above on the classpath. [docs/RECIPES.md](docs/RECIPES.md) spell
 
 | Document | Purpose |
 | --- | --- |
-| [docs/RECIPES.md](docs/RECIPES.md) | Every recipe this repository publishes, by the name you pass to activeRecipe. |
+| [Recipes](docs/RECIPES.md) | Every recipe this repository publishes, by the name you pass to activeRecipe. |
 
 ## Contributing
 
