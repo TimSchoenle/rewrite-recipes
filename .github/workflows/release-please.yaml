@@ -35,6 +35,12 @@ jobs:
         with:
           app-id: ${{ secrets.RELEASE_BOT_APP_ID }}
           private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+          # Narrowed to what release-please does with it: push the release branches and tags, open
+          # and update the release pull requests, and label them. An unscoped token inherits every
+          # permission the installation holds, which zizmor's `github-app` rule reports as an error.
+          permission-contents: write
+          permission-issues: write
+          permission-pull-requests: write
 
       - name: Run release-please
         id: release
