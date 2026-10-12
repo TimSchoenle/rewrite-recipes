@@ -46,12 +46,11 @@
         {
             "type": "docs",
             "section": "Documentation",
-            "hidden": false
+            "hidden": true
         },
         {
             "type": "refactor",
-            "section": "Code Refactoring",
-            "hidden": false
+            "section": "Code Refactoring"
         },
         {
             "type": "test",
@@ -70,8 +69,7 @@
         },
         {
             "type": "build",
-            "section": "Build System",
-            "hidden": true
+            "section": "Build System"
         },
         {
             "type": "chore",
@@ -80,8 +78,7 @@
         },
         {
             "type": "deps",
-            "section": "Dependencies",
-            "hidden": false
+            "section": "Dependencies"
         }
     ]
 }
