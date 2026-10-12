@@ -1,4 +1,11 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": ["github>TimSchoenle/actions//configs/renovate/default"]
+    "extends": ["github>TimSchoenle/actions//configs/renovate/default"],
+    "packageRules": [
+        {
+            "description": "rewrite-recipe-bom 3.38.0 imports org.openrewrite:rewrite-bom 8.91.0, which Maven Central does not have, so no project depending on it resolves.",
+            "matchPackageNames": ["org.openrewrite.recipe:rewrite-recipe-bom"],
+            "allowedVersions": "!/^3\\.38\\.0$/"
+        }
+    ]
 }
