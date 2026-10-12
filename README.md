@@ -22,6 +22,7 @@ OpenRewrite recipes for Java static analysis and InvUI 1.x to 2.x migration, pub
 
 [![Version](https://img.shields.io/maven-central/v/de.timscho.rewrite/catalog?label=maven%20central)](https://central.sonatype.com/artifact/de.timscho.rewrite/catalog)
 [![Build](https://img.shields.io/github/actions/workflow/status/TimSchoenle/rewrite-recipes/ci.yaml?branch=main)](https://github.com/TimSchoenle/rewrite-recipes/actions/workflows/ci.yaml)
+[![Codecov](https://codecov.io/gh/TimSchoenle/rewrite-recipes/graph/badge.svg)](https://codecov.io/gh/TimSchoenle/rewrite-recipes)
 [![License](https://img.shields.io/github/license/TimSchoenle/rewrite-recipes)](LICENSE)
 [![JDK](https://img.shields.io/badge/jdk-21-orange)](https://openjdk.org)
 
