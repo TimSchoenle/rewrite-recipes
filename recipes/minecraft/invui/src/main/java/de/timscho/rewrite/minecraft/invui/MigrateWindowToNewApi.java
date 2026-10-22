@@ -2,12 +2,14 @@ package de.timscho.rewrite.minecraft.invui;
 
 import org.jspecify.annotations.NonNull;
 import org.openrewrite.ExecutionContext;
+import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.ChangeType;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.JavaTemplate;
 import org.openrewrite.java.MethodMatcher;
+import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
@@ -69,9 +71,18 @@ public class MigrateWindowToNewApi extends Recipe {
         return "Migrates safe Window API changes (renames/type changes) and marks ambiguous migrations for manual follow-up.";
     }
 
+    // The builder is a type of its own: a file can call into it, for example on a builder returned
+    // from another class, without referencing the enclosing Window.
+    private static TreeVisitor<?, ExecutionContext> usesWindow() {
+        return Preconditions.or(
+            new UsesType<>(MigrateWindowToNewApi.WINDOW, true),
+            new UsesType<>(MigrateWindowToNewApi.WINDOW_BUILDER, true)
+        );
+    }
+
     @Override
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new JavaIsoVisitor<>() {
+        return Preconditions.check(MigrateWindowToNewApi.usesWindow(), new JavaIsoVisitor<>() {
             @Override
             public J.@NonNull CompilationUnit visitCompilationUnit(final J.@NonNull CompilationUnit compilationUnit, final @NonNull ExecutionContext ctx) {
                 if (this.usesWindowMethods(compilationUnit)) {
@@ -252,6 +263,6 @@ public class MigrateWindowToNewApi extends Recipe {
 
                 return usesWindowMethods.get();
             }
-        };
+        });
     }
 }

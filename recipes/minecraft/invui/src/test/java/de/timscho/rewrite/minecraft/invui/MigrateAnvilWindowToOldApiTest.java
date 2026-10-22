@@ -83,4 +83,58 @@ class MigrateAnvilWindowToOldApiTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void migratesSetUpperGuiOnBuilderObtainedFromAnotherClass() {
+        this.rewriteRun(
+            java(
+                """
+                package xyz.xenondevs.invui.window;
+
+                public interface AnvilWindow {
+                    static Builder.Split split() { return null; }
+
+                    interface Builder {
+                        Builder setUpperGui(Object gui);
+                        Builder setGui(Object gui);
+                        interface Split extends Builder {}
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import xyz.xenondevs.invui.window.AnvilWindow;
+
+                class AnvilWindows {
+                    static AnvilWindow.Builder.Split create() {
+                        return AnvilWindow.split();
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                class UsesAnvilWindows {
+                    void use() {
+                        AnvilWindows.create().setUpperGui(new Object());
+                    }
+                }
+                """,
+                """
+                package test;
+
+                class UsesAnvilWindows {
+                    void use() {
+                        AnvilWindows.create().setGui(new Object());
+                    }
+                }
+                """
+            )
+        );
+    }
 }

@@ -2,11 +2,13 @@ package de.timscho.rewrite.minecraft.invui;
 
 import org.jspecify.annotations.NonNull;
 import org.openrewrite.ExecutionContext;
+import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.AddImport;
 import org.openrewrite.java.JavaTemplate;
 import org.openrewrite.java.JavaVisitor;
+import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.Statement;
@@ -45,7 +47,7 @@ public class MigrateStatelessItemProviderToItemWrapper extends Recipe {
 
     @Override
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new JavaVisitor<>() {
+        return Preconditions.check(new UsesType<>(MigrateStatelessItemProviderToItemWrapper.ITEM_PROVIDER, true), new JavaVisitor<>() {
             @Override
             public @NonNull J visitNewClass(final J.@NonNull NewClass newClass, final @NonNull ExecutionContext ctx) {
                 final J nc = super.visitNewClass(newClass, ctx);
@@ -132,6 +134,6 @@ public class MigrateStatelessItemProviderToItemWrapper extends Recipe {
                 }
                 return found;
             }
-        };
+        });
     }
 }

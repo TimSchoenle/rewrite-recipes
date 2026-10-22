@@ -2,11 +2,13 @@ package de.timscho.rewrite.minecraft.invui;
 
 import org.jspecify.annotations.NonNull;
 import org.openrewrite.ExecutionContext;
+import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.JavaTemplate;
 import org.openrewrite.java.MethodMatcher;
+import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.NameTree;
@@ -49,7 +51,7 @@ public class MigrateItemProviderStringGetToLocaleApi extends Recipe {
 
     @Override
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new JavaIsoVisitor<>() {
+        return Preconditions.check(new UsesType<>(MigrateItemProviderStringGetToLocaleApi.ITEM_PROVIDER, true), new JavaIsoVisitor<>() {
             @Override
             public J.@NonNull MethodInvocation visitMethodInvocation(final J.@NonNull MethodInvocation method, final @NonNull ExecutionContext ctx) {
                 final J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
@@ -271,6 +273,6 @@ public class MigrateItemProviderStringGetToLocaleApi extends Recipe {
                     case null, default -> null;
                 };
             }
-        };
+        });
     }
 }

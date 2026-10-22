@@ -212,4 +212,31 @@ class MigrateScrollGuiToNewApiTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void doesNotChangeSourceWithoutInvUiReferences() {
+        this.rewriteRun(
+            java(
+                """
+                package test;
+
+                import java.util.List;
+                import java.util.function.Consumer;
+
+                class ScrollGui {
+                    static ScrollGui items(Consumer<Object> consumer) { return new ScrollGui(); }
+                    static ScrollGui ofItems(int width, int height, List<Object> items, int... slots) { return new ScrollGui(); }
+                }
+
+                class UsesScrollGui {
+                    void use(List<Object> items) {
+                        ScrollGui.items(builder -> {
+                        });
+                        ScrollGui.ofItems(9, 4, items, 0, 1, 2);
+                    }
+                }
+                """
+            )
+        );
+    }
 }

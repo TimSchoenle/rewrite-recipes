@@ -94,4 +94,26 @@ class MigrateGuiToNewApiTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void doesNotChangeSourceWithoutInvUiReferences() {
+        this.rewriteRun(
+            java(
+                """
+                package test;
+
+                class Gui {
+                    static Gui normal() { return new Gui(); }
+                    java.util.List<Object> findAllWindows() { return null; }
+                }
+
+                class UsesGui {
+                    Object use() {
+                        return Gui.normal().findAllWindows();
+                    }
+                }
+                """
+            )
+        );
+    }
 }

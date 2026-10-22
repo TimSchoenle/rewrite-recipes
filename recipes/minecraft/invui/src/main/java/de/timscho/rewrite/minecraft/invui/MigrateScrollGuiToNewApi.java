@@ -2,11 +2,13 @@ package de.timscho.rewrite.minecraft.invui;
 
 import org.jspecify.annotations.NonNull;
 import org.openrewrite.ExecutionContext;
+import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.JavaTemplate;
 import org.openrewrite.java.MethodMatcher;
+import org.openrewrite.java.search.UsesMethod;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 
@@ -60,9 +62,20 @@ public class MigrateScrollGuiToNewApi extends Recipe {
         return "Migrates ScrollGui consumer factory overloads and legacy int content-list slot signatures to v2.";
     }
 
+    private static TreeVisitor<?, ExecutionContext> usesMigratedScrollGuiMethod() {
+        return Preconditions.or(
+            new UsesMethod<>(MigrateScrollGuiToNewApi.SCROLL_GUI_ITEMS_WITH_CONSUMER),
+            new UsesMethod<>(MigrateScrollGuiToNewApi.SCROLL_GUI_GUIS_WITH_CONSUMER),
+            new UsesMethod<>(MigrateScrollGuiToNewApi.SCROLL_GUI_INVENTORIES_WITH_CONSUMER),
+            new UsesMethod<>(MigrateScrollGuiToNewApi.SCROLL_GUI_OF_ITEMS_WITH_INT_SLOTS),
+            new UsesMethod<>(MigrateScrollGuiToNewApi.SCROLL_GUI_OF_GUIS_WITH_INT_SLOTS),
+            new UsesMethod<>(MigrateScrollGuiToNewApi.SCROLL_GUI_OF_INVENTORIES_WITH_INT_SLOTS)
+        );
+    }
+
     @Override
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new JavaIsoVisitor<>() {
+        return Preconditions.check(MigrateScrollGuiToNewApi.usesMigratedScrollGuiMethod(), new JavaIsoVisitor<>() {
             @Override
             public J.@NonNull MethodInvocation visitMethodInvocation(final J.@NonNull MethodInvocation method, final @NonNull ExecutionContext ctx) {
                 final J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
@@ -154,6 +167,6 @@ public class MigrateScrollGuiToNewApi extends Recipe {
                     .build()
                     .apply(this.getCursor(), method.getCoordinates().replaceArguments(), width, height, content);
             }
-        };
+        });
     }
 }

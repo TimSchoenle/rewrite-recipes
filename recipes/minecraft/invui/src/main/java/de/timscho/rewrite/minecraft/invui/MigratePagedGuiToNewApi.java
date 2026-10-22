@@ -2,10 +2,12 @@ package de.timscho.rewrite.minecraft.invui;
 
 import org.jspecify.annotations.NonNull;
 import org.openrewrite.ExecutionContext;
+import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.MethodMatcher;
+import org.openrewrite.java.search.UsesMethod;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.marker.SearchResult;
 
@@ -64,9 +66,32 @@ public class MigratePagedGuiToNewApi extends Recipe {
         return "Migrates safe PagedGui API renames from InvUI v1 to v2.";
     }
 
+    private static TreeVisitor<?, ExecutionContext> usesMigratedPagedGuiMethod() {
+        return Preconditions.or(
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_ITEMS_BUILDER_FACTORY),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_GUIS_BUILDER_FACTORY),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_INVENTORIES_BUILDER_FACTORY),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_GET_PAGE_AMOUNT),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_GET_CURRENT_PAGE),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_ITEMS_WITH_CONSUMER),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_GUIS_WITH_CONSUMER),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_INVENTORIES_WITH_CONSUMER),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_OF_ITEMS_WITH_INT_SLOTS),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_OF_GUIS_WITH_INT_SLOTS),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_OF_INVENTORIES_WITH_INT_SLOTS),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_HAS_NEXT_PAGE),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_HAS_PREVIOUS_PAGE),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_HAS_INFINITE_PAGES),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_GO_FORWARD),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_GO_BACK),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_GET_CONTENT_LIST_SLOTS),
+            new UsesMethod<>(MigratePagedGuiToNewApi.PAGED_GUI_BUILDER_ADD_CONTENT)
+        );
+    }
+
     @Override
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new JavaIsoVisitor<>() {
+        return Preconditions.check(MigratePagedGuiToNewApi.usesMigratedPagedGuiMethod(), new JavaIsoVisitor<>() {
             @Override
             public J.@NonNull MethodInvocation visitMethodInvocation(final J.@NonNull MethodInvocation method, final @NonNull ExecutionContext ctx) {
                 final J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
@@ -136,6 +161,6 @@ public class MigratePagedGuiToNewApi extends Recipe {
 
                 return m;
             }
-        };
+        });
     }
 }

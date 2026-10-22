@@ -234,4 +234,30 @@ class MigrateStatelessItemProviderToItemWrapperTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void doesNotMigrateLookalikeItemProviderOutsideInvUi() {
+        this.rewriteRun(
+            java(
+                """
+                package test;
+
+                interface ItemProvider {
+                    Object get(String lang);
+                }
+
+                class UsesItemProvider {
+                    ItemProvider create(Object stack) {
+                        return new ItemProvider() {
+                            @Override
+                            public Object get(String lang) {
+                                return stack;
+                            }
+                        };
+                    }
+                }
+                """
+            )
+        );
+    }
 }

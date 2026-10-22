@@ -3,11 +3,14 @@ package de.timscho.rewrite.minecraft.invui;
 import org.jspecify.annotations.NonNull;
 import org.openrewrite.Cursor;
 import org.openrewrite.ExecutionContext;
+import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.ChangeType;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.JavaTemplate;
+import org.openrewrite.java.search.DeclaresType;
+import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
@@ -50,9 +53,17 @@ public class MigrateItemHandleClickToClickApi extends Recipe {
         return "Migrates `handleClick(ClickType, Player, InventoryClickEvent)` to use `xyz.xenondevs.invui.Click`.";
     }
 
+    // DeclaresType covers the file declaring Item itself, whose own handleClick signature is migrated too.
+    private static TreeVisitor<?, ExecutionContext> usesOrDeclaresItem() {
+        return Preconditions.or(
+            new UsesType<>(MigrateItemHandleClickToClickApi.ITEM, true),
+            new DeclaresType<>(MigrateItemHandleClickToClickApi.ITEM)
+        );
+    }
+
     @Override
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new JavaIsoVisitor<>() {
+        return Preconditions.check(MigrateItemHandleClickToClickApi.usesOrDeclaresItem(), new JavaIsoVisitor<>() {
             private boolean isLegacyHandleClickDeclaration(final J.MethodDeclaration method) {
                 if (!"handleClick".equals(method.getSimpleName()) || method.getParameters().size() != 3) {
                     return false;
@@ -223,6 +234,6 @@ public class MigrateItemHandleClickToClickApi extends Recipe {
                 final String parameterSource = variableDeclarations.printTrimmed(this.getCursor());
                 return parameterSource.contains(fqType) || parameterSource.contains(" " + simpleName + " ");
             }
-        };
+        });
     }
 }

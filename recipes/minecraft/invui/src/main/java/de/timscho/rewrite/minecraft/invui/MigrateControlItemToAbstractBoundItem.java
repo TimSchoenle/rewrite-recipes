@@ -2,12 +2,14 @@ package de.timscho.rewrite.minecraft.invui;
 
 import org.jspecify.annotations.NonNull;
 import org.openrewrite.ExecutionContext;
+import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.ChangeType;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.JavaTemplate;
 import org.openrewrite.java.MethodMatcher;
+import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
@@ -62,9 +64,18 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
         return "Migrates ControlItem usages and adapts subclasses to the AbstractBoundItem contract.";
     }
 
+    // AbstractBoundItem is listed as well because the ChangeType this recipe schedules leaves a file
+    // referencing only AbstractBoundItem, and the type-parameter cleanup finishes in the next cycle.
+    private static TreeVisitor<?, ExecutionContext> usesBoundItemHierarchy() {
+        return Preconditions.or(
+            new UsesType<>(MigrateControlItemToAbstractBoundItem.CONTROL_ITEM, true),
+            new UsesType<>(MigrateControlItemToAbstractBoundItem.ABSTRACT_BOUND_ITEM, true)
+        );
+    }
+
     @Override
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new JavaIsoVisitor<>() {
+        return Preconditions.check(MigrateControlItemToAbstractBoundItem.usesBoundItemHierarchy(), new JavaIsoVisitor<>() {
             @Override
             public J.@NonNull CompilationUnit visitCompilationUnit(final J.@NonNull CompilationUnit compilationUnit, final @NonNull ExecutionContext ctx) {
                 this.doAfterVisit(new ChangeType(MigrateControlItemToAbstractBoundItem.CONTROL_ITEM, MigrateControlItemToAbstractBoundItem.ABSTRACT_BOUND_ITEM, true).getVisitor());
@@ -742,6 +753,6 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
             private boolean isApiType(final JavaType type) {
                 return TypeUtils.isOfClassType(type, MigrateControlItemToAbstractBoundItem.CONTROL_ITEM) || TypeUtils.isOfClassType(type, MigrateControlItemToAbstractBoundItem.ABSTRACT_BOUND_ITEM);
             }
-        };
+        });
     }
 }
