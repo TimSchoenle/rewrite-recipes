@@ -2,10 +2,12 @@ package de.timscho.rewrite.minecraft.invui;
 
 import org.jspecify.annotations.NonNull;
 import org.openrewrite.ExecutionContext;
+import org.openrewrite.Preconditions;
 import org.openrewrite.Recipe;
 import org.openrewrite.TreeVisitor;
 import org.openrewrite.java.JavaIsoVisitor;
 import org.openrewrite.java.MethodMatcher;
+import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.TypeUtils;
@@ -43,9 +45,18 @@ public class MigrateAnvilWindowToOldApi extends Recipe {
         return "Migrates safe AnvilWindow API renames from InvUI v2 to v1.";
     }
 
+    // The builder is a type of its own: a file can call into it, for example on a builder returned
+    // from another class, without referencing the enclosing AnvilWindow.
+    private static TreeVisitor<?, ExecutionContext> usesAnvilWindow() {
+        return Preconditions.or(
+            new UsesType<>(MigrateAnvilWindowToOldApi.ANVIL_WINDOW, true),
+            new UsesType<>(MigrateAnvilWindowToOldApi.ANVIL_WINDOW_BUILDER, true)
+        );
+    }
+
     @Override
     public @NonNull TreeVisitor<?, ExecutionContext> getVisitor() {
-        return new JavaIsoVisitor<>() {
+        return Preconditions.check(MigrateAnvilWindowToOldApi.usesAnvilWindow(), new JavaIsoVisitor<>() {
             @Override
             public J.@NonNull MethodInvocation visitMethodInvocation(final J.@NonNull MethodInvocation method, final @NonNull ExecutionContext ctx) {
                 final J.MethodInvocation m = super.visitMethodInvocation(method, ctx);
@@ -78,6 +89,6 @@ public class MigrateAnvilWindowToOldApi extends Recipe {
                 return method.getSelect() != null &&
                     TypeUtils.isAssignableTo(MigrateAnvilWindowToOldApi.ANVIL_WINDOW_BUILDER, method.getSelect().getType());
             }
-        };
+        });
     }
 }
