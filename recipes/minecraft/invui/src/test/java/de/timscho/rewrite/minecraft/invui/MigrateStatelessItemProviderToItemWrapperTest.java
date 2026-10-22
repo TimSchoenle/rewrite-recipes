@@ -260,4 +260,50 @@ class MigrateStatelessItemProviderToItemWrapperTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void doesNotMigrateLookalikeItemProviderInFileUsingInvUiItemProvider() {
+        this.rewriteRun(
+            java(
+                """
+                package org.bukkit.inventory;
+
+                public class ItemStack {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                import org.bukkit.inventory.ItemStack;
+
+                public interface ItemProvider {
+                    ItemStack get(String lang);
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                interface ItemProvider {
+                    Object get(String lang);
+                }
+
+                class UsesBoth {
+                    xyz.xenondevs.invui.item.ItemProvider invui;
+
+                    ItemProvider create(Object stack) {
+                        return new ItemProvider() {
+                            @Override
+                            public Object get(String lang) {
+                                return stack;
+                            }
+                        };
+                    }
+                }
+                """
+            )
+        );
+    }
 }

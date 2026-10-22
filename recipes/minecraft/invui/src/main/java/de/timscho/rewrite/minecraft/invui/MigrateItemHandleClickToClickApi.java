@@ -193,6 +193,11 @@ public class MigrateItemHandleClickToClickApi extends Recipe {
             }
 
             private boolean isHandleClickLikeMethod(final J.MethodDeclaration method) {
+                final JavaType.Method methodType = method.getMethodType();
+                if (methodType != null && !TypeUtils.isAssignableTo(MigrateItemHandleClickToClickApi.ITEM, methodType.getDeclaringType())) {
+                    return false;
+                }
+
                 return "handleClick".equals(method.getSimpleName()) &&
                     method.getParameters().size() == 3 &&
                     this.parameterHasType(method.getParameters().get(0), MigrateItemHandleClickToClickApi.CLICK_TYPE) &&

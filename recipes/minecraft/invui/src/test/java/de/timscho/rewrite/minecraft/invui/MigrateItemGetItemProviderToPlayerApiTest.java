@@ -251,4 +251,48 @@ class MigrateItemGetItemProviderToPlayerApiTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void doesNotTouchUnrelatedGetItemProviderInFileUsingItem() {
+        this.rewriteRun(
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                public interface ItemProvider {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                public interface Item {
+                    default ItemProvider getItemProvider() {
+                        return null;
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import xyz.xenondevs.invui.item.Item;
+
+                interface Source {
+                    Object getItemProvider();
+                }
+
+                class Settings implements Source {
+                    Item item;
+
+                    @Override
+                    public Object getItemProvider() {
+                        return null;
+                    }
+                }
+                """
+            )
+        );
+    }
 }

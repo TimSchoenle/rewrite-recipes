@@ -332,4 +332,64 @@ class MigrateItemHandleClickToClickApiTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void doesNotRewriteHandleClickOutsideItemHierarchyInFileUsingItem() {
+        this.rewriteRun(
+            java(
+                """
+                package org.bukkit.entity;
+
+                public class Player {}
+                """
+            ),
+            java(
+                """
+                package org.bukkit.event.inventory;
+
+                public enum ClickType { LEFT }
+                """
+            ),
+            java(
+                """
+                package org.bukkit.event.inventory;
+
+                import org.bukkit.entity.Player;
+
+                public class InventoryClickEvent {
+                    public Player getWhoClicked() { return null; }
+                    public ClickType getClick() { return null; }
+                    public int getHotbarButton() { return -1; }
+                }
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                public interface Item {}
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import org.bukkit.entity.Player;
+                import org.bukkit.event.inventory.ClickType;
+                import org.bukkit.event.inventory.InventoryClickEvent;
+                import xyz.xenondevs.invui.item.Item;
+
+                class MenuListener {
+                    Item item;
+
+                    void handleClick(ClickType clickType, Player player, InventoryClickEvent event) {
+                        Player who = event.getWhoClicked();
+                        ClickType type = event.getClick();
+                        int button = event.getHotbarButton();
+                    }
+                }
+                """
+            )
+        );
+    }
 }

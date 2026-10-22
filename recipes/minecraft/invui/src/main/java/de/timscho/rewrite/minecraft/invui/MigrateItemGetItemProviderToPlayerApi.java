@@ -95,6 +95,9 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
                 if (c.getKind() == J.ClassDeclaration.Kind.Type.Interface || c.getKind() == J.ClassDeclaration.Kind.Type.Annotation) {
                     return c;
                 }
+                if (!this.isItemHierarchyType(c.getType())) {
+                    return c;
+                }
                 if (!this.hasNoArgMethod(c, "getItemProvider") || this.hasMethodWithParamType(c, "getItemProvider", MigrateItemGetItemProviderToPlayerApi.PLAYER)) {
                     return c;
                 }
@@ -135,10 +138,15 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
 
                 final JavaType.Method methodType = method.getMethodType();
                 if (methodType != null) {
-                    return methodType.getParameterTypes().isEmpty();
+                    return methodType.getParameterTypes().isEmpty() && this.isItemHierarchyType(methodType.getDeclaringType());
                 }
 
                 return true;
+            }
+
+            // An unresolved type is let through, as everywhere else in this recipe; a resolved one has to be an Item.
+            private boolean isItemHierarchyType(final JavaType.FullyQualified type) {
+                return type == null || type instanceof JavaType.Unknown || TypeUtils.isAssignableTo(MigrateItemGetItemProviderToPlayerApi.ITEM, type);
             }
 
             private boolean isInsidePlayerGetItemProviderMethod(final J.MethodInvocation method) {
