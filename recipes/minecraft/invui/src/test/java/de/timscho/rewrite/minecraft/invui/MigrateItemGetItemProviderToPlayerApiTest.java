@@ -56,7 +56,27 @@ class MigrateItemGetItemProviderToPlayerApiTest implements RewriteTest {
                         return null;
                     }
                 }
+                """,
                 """
+                package test;
+
+                import xyz.xenondevs.invui.item.Item;
+                import xyz.xenondevs.invui.item.ItemProvider;
+
+                class LegacyItem implements Item {
+                    public ItemProvider getItemProvider() {
+                        return null;
+                    }
+
+                    @Override
+                    public xyz.xenondevs.invui.item.ItemProvider getItemProvider(org.bukkit.entity.Player viewer) {
+                        return getItemProvider();
+                    }
+                }
+                """.replace(
+                    "\nclass LegacyItem implements Item {\n    public ItemProvider getItemProvider()",
+                    "\nclass LegacyItem implements Item {\n    \n    public ItemProvider getItemProvider()"
+                )
             ),
             java(
                 """
@@ -139,6 +159,79 @@ class MigrateItemGetItemProviderToPlayerApiTest implements RewriteTest {
     }
 
     @Test
+    void removesOverrideFromNoArgGetItemProviderWhenPlayerOverloadExists() {
+        this.rewriteRun(
+            java(
+                """
+                package org.bukkit.entity;
+
+                public class Player {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                public interface ItemProvider {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                import org.bukkit.entity.Player;
+
+                public interface Item {
+                    ItemProvider getItemProvider(Player viewer);
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import org.bukkit.entity.Player;
+                import xyz.xenondevs.invui.item.Item;
+                import xyz.xenondevs.invui.item.ItemProvider;
+
+                class LegacyItem implements Item {
+                    @Override
+                    public ItemProvider getItemProvider() {
+                        return null;
+                    }
+
+                    @Override
+                    public ItemProvider getItemProvider(Player viewer) {
+                        return getItemProvider();
+                    }
+                }
+                """,
+                """
+                package test;
+
+                import org.bukkit.entity.Player;
+                import xyz.xenondevs.invui.item.Item;
+                import xyz.xenondevs.invui.item.ItemProvider;
+
+                class LegacyItem implements Item {
+                    public ItemProvider getItemProvider() {
+                        return null;
+                    }
+
+                    @Override
+                    public ItemProvider getItemProvider(Player viewer) {
+                        return getItemProvider();
+                    }
+                }
+                """.replace(
+                    "\nclass LegacyItem implements Item {\n    public ItemProvider getItemProvider()",
+                    "\nclass LegacyItem implements Item {\n    \n    public ItemProvider getItemProvider()"
+                )
+            )
+        );
+    }
+
+    @Test
     void doesNotBridgeGetItemProviderOutsideInvUi() {
         this.rewriteRun(
             java(
@@ -152,6 +245,89 @@ class MigrateItemGetItemProviderToPlayerApiTest implements RewriteTest {
                 class UsesSettings {
                     Object use(Settings settings) {
                         return settings.getItemProvider();
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void doesNotTouchUnrelatedGetItemProviderInFileUsingItem() {
+        this.rewriteRun(
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                public interface ItemProvider {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                public interface Item {
+                    default ItemProvider getItemProvider() {
+                        return null;
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import xyz.xenondevs.invui.item.Item;
+
+                interface Source {
+                    Object getItemProvider();
+                }
+
+                class Settings implements Source {
+                    Item item;
+
+                    @Override
+                    public Object getItemProvider() {
+                        return null;
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
+    void doesNotBridgeClassWithUnresolvedSupertypeInFileUsingItem() {
+        this.rewriteRun(
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                public interface ItemProvider {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                public interface Item {
+                    default ItemProvider getItemProvider() {
+                        return null;
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import xyz.xenondevs.invui.item.Item;
+
+                class Settings extends UnknownBase {
+                    Item item;
+
+                    Object getItemProvider() {
+                        return null;
                     }
                 }
                 """

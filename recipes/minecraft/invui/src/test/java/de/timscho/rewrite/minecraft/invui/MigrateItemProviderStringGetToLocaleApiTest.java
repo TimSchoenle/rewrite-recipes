@@ -116,6 +116,74 @@ class MigrateItemProviderStringGetToLocaleApiTest implements RewriteTest {
     }
 
     @Test
+    void doesNotRewriteStringGetInsideOwnNoArgGet() {
+        this.rewriteRun(
+            java(
+                """
+                package org.bukkit.inventory;
+
+                public class ItemStack {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                import org.bukkit.inventory.ItemStack;
+
+                public interface ItemProvider {
+                    ItemStack get(String lang);
+                    default ItemStack get() {
+                        return get(null);
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import org.bukkit.inventory.ItemStack;
+                import xyz.xenondevs.invui.item.ItemProvider;
+
+                class CustomProvider implements ItemProvider {
+                    public ItemStack get(String lang) {
+                        return null;
+                    }
+
+                    @Override
+                    public ItemStack get() {
+                        return get("en_us");
+                    }
+                }
+                """,
+                """
+                package test;
+
+                import org.bukkit.inventory.ItemStack;
+                import xyz.xenondevs.invui.item.ItemProvider;
+
+                class CustomProvider implements ItemProvider {
+                    public ItemStack get(String lang) {
+                        return null;
+                    }
+
+                    @Override
+                    public ItemStack get() {
+                        return get("en_us");
+                    }
+
+                    @Override
+                    public org.bukkit.inventory.ItemStack get(java.util.Locale locale) {
+                        return get(locale == null ? null : locale.toLanguageTag());
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
     void doesNotRewriteLocaleBasedGetInvocations() {
         this.rewriteRun(
             java(

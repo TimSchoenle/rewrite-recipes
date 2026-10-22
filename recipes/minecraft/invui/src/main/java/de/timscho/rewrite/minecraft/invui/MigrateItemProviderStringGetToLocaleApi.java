@@ -119,7 +119,7 @@ public class MigrateItemProviderStringGetToLocaleApi extends Recipe {
                 }
 
                 final String sourceAfterLocaleBridge = c.printTrimmed(this.getCursor());
-                final boolean hasNoArgGet = this.hasMethod(c, "get", 0) || sourceAfterLocaleBridge.contains(" get()");
+                final boolean hasNoArgGet = this.hasNoArgMethod(c, "get") || sourceAfterLocaleBridge.contains(" get()");
                 if (!hasNoArgGet) {
                     c = JavaTemplate.builder(
                             "@Override public org.bukkit.inventory.ItemStack get() { return get((java.util.Locale) null); }"
@@ -162,7 +162,7 @@ public class MigrateItemProviderStringGetToLocaleApi extends Recipe {
                     return false;
                 }
 
-                if (enclosingMethod.getParameters().isEmpty()) {
+                if (ArgumentLists.isEmpty(enclosingMethod.getParameters())) {
                     return true;
                 }
 
@@ -184,11 +184,11 @@ public class MigrateItemProviderStringGetToLocaleApi extends Recipe {
                 return this.parameterHasType(method.getParameters().getFirst(), MigrateItemProviderStringGetToLocaleApi.STRING);
             }
 
-            private boolean hasMethod(final J.ClassDeclaration classDecl, final String methodName, final int paramCount) {
+            private boolean hasNoArgMethod(final J.ClassDeclaration classDecl, final String methodName) {
                 for (final Statement statement : classDecl.getBody().getStatements()) {
                     if (statement instanceof final J.MethodDeclaration methodDeclaration &&
                         methodName.equals(methodDeclaration.getSimpleName()) &&
-                        methodDeclaration.getParameters().size() == paramCount) {
+                        ArgumentLists.isEmpty(methodDeclaration.getParameters())) {
                         return true;
                     }
                 }

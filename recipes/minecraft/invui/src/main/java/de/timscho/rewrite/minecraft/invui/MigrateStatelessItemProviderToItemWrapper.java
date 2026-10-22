@@ -11,6 +11,7 @@ import org.openrewrite.java.JavaVisitor;
 import org.openrewrite.java.search.UsesType;
 import org.openrewrite.java.tree.Expression;
 import org.openrewrite.java.tree.J;
+import org.openrewrite.java.tree.JavaType;
 import org.openrewrite.java.tree.Statement;
 import org.openrewrite.java.tree.TypeUtils;
 
@@ -55,12 +56,7 @@ public class MigrateStatelessItemProviderToItemWrapper extends Recipe {
                     return nc;
                 }
 
-                final String newClassSource = n.printTrimmed(this.getCursor());
-                final boolean isItemProviderAnonymousClass =
-                    TypeUtils.isAssignableTo(MigrateStatelessItemProviderToItemWrapper.ITEM_PROVIDER, n.getType()) ||
-                        newClassSource.startsWith("new ItemProvider(") ||
-                        newClassSource.startsWith("new xyz.xenondevs.invui.item.ItemProvider(");
-                if (!isItemProviderAnonymousClass) {
+                if (!this.isItemProviderAnonymousClass(n)) {
                     return nc;
                 }
 
@@ -101,6 +97,25 @@ public class MigrateStatelessItemProviderToItemWrapper extends Recipe {
                     .build()
                     .apply(this.getCursor(), n.getCoordinates().replace(), returnedExpression)
                     .withPrefix(n.getPrefix());
+            }
+
+            // The printed source is consulted only when the type is unresolved; a resolved type that is not
+            // the InvUI ItemProvider is a lookalike, such as a local interface of the same simple name. An
+            // unresolved simple name counts only when an explicit import binds it to the InvUI type.
+            private boolean isItemProviderAnonymousClass(final J.NewClass newClass) {
+                final JavaType type = newClass.getType();
+                if (type != null && !(type instanceof JavaType.Unknown)) {
+                    return TypeUtils.isAssignableTo(MigrateStatelessItemProviderToItemWrapper.ITEM_PROVIDER, type);
+                }
+
+                final String newClassSource = newClass.printTrimmed(this.getCursor());
+                if (newClassSource.startsWith("new xyz.xenondevs.invui.item.ItemProvider(")) {
+                    return true;
+                }
+                return newClassSource.startsWith("new ItemProvider(") && ExplicitImports.importsType(
+                    this.getCursor().firstEnclosingOrThrow(J.CompilationUnit.class),
+                    MigrateStatelessItemProviderToItemWrapper.ITEM_PROVIDER
+                );
             }
 
             private boolean usesParameter(final Expression expression, final String parameterName) {

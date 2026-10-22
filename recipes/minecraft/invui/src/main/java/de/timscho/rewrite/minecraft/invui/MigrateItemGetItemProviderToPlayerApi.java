@@ -95,7 +95,10 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
                 if (c.getKind() == J.ClassDeclaration.Kind.Type.Interface || c.getKind() == J.ClassDeclaration.Kind.Type.Annotation) {
                     return c;
                 }
-                if (!this.hasMethod(c, "getItemProvider", 0) || this.hasMethodWithParamType(c, "getItemProvider", MigrateItemGetItemProviderToPlayerApi.PLAYER)) {
+                if (!this.isItemClass(c)) {
+                    return c;
+                }
+                if (!this.hasNoArgMethod(c, "getItemProvider") || this.hasMethodWithParamType(c, "getItemProvider", MigrateItemGetItemProviderToPlayerApi.PLAYER)) {
                     return c;
                 }
 
@@ -115,7 +118,7 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
                     return true;
                 }
 
-                if (!"getItemProvider".equals(method.getSimpleName()) || !method.getArguments().isEmpty()) {
+                if (!"getItemProvider".equals(method.getSimpleName()) || !ArgumentLists.isEmpty(method.getArguments())) {
                     return false;
                 }
 
@@ -129,16 +132,58 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
             }
 
             private boolean isLegacyNoArgGetItemProviderMethod(final J.MethodDeclaration method) {
-                if (!"getItemProvider".equals(method.getSimpleName()) || !method.getParameters().isEmpty()) {
+                if (!"getItemProvider".equals(method.getSimpleName()) || !ArgumentLists.isEmpty(method.getParameters())) {
                     return false;
                 }
 
                 final JavaType.Method methodType = method.getMethodType();
                 if (methodType != null) {
-                    return methodType.getParameterTypes().isEmpty();
+                    return methodType.getParameterTypes().isEmpty() && this.isItemHierarchyType(methodType.getDeclaringType());
                 }
 
                 return true;
+            }
+
+            // The bridge carries @Override, which does not compile outside the Item hierarchy, so an unresolved
+            // class type is not enough on its own: a supertype has to resolve to Item, or be spelled as Item
+            // through a fully qualified name or an explicit single-type import.
+            private boolean isItemClass(final J.ClassDeclaration classDecl) {
+                final JavaType.FullyQualified type = classDecl.getType();
+                if (type != null && !(type instanceof JavaType.Unknown)) {
+                    return TypeUtils.isAssignableTo(MigrateItemGetItemProviderToPlayerApi.ITEM, type);
+                }
+
+                if (classDecl.getExtends() != null && this.isItemSupertype(classDecl.getExtends())) {
+                    return true;
+                }
+                if (classDecl.getImplements() != null) {
+                    for (final TypeTree supertype : classDecl.getImplements()) {
+                        if (this.isItemSupertype(supertype)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            private boolean isItemSupertype(final TypeTree supertype) {
+                if (TypeUtils.isAssignableTo(MigrateItemGetItemProviderToPlayerApi.ITEM, supertype.getType())) {
+                    return true;
+                }
+                if (supertype instanceof final J.FieldAccess fieldAccess) {
+                    return MigrateItemGetItemProviderToPlayerApi.ITEM.equals(fieldAccess.printTrimmed(this.getCursor()));
+                }
+                return supertype instanceof final J.Identifier identifier
+                    && "Item".equals(identifier.getSimpleName())
+                    && ExplicitImports.importsType(
+                        this.getCursor().firstEnclosingOrThrow(J.CompilationUnit.class),
+                        MigrateItemGetItemProviderToPlayerApi.ITEM
+                    );
+            }
+
+            // An unresolved type is let through, as everywhere else in this recipe; a resolved one has to be an Item.
+            private boolean isItemHierarchyType(final JavaType.FullyQualified type) {
+                return type == null || type instanceof JavaType.Unknown || TypeUtils.isAssignableTo(MigrateItemGetItemProviderToPlayerApi.ITEM, type);
             }
 
             private boolean isInsidePlayerGetItemProviderMethod(final J.MethodInvocation method) {
@@ -153,11 +198,11 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
                     this.parameterHasType(enclosingMethod.getParameters().getFirst(), MigrateItemGetItemProviderToPlayerApi.PLAYER);
             }
 
-            private boolean hasMethod(final J.ClassDeclaration classDecl, final String methodName, final int paramCount) {
+            private boolean hasNoArgMethod(final J.ClassDeclaration classDecl, final String methodName) {
                 for (final Statement statement : classDecl.getBody().getStatements()) {
                     if (statement instanceof final J.MethodDeclaration methodDeclaration &&
                         methodName.equals(methodDeclaration.getSimpleName()) &&
-                        methodDeclaration.getParameters().size() == paramCount) {
+                        ArgumentLists.isEmpty(methodDeclaration.getParameters())) {
                         return true;
                     }
                 }

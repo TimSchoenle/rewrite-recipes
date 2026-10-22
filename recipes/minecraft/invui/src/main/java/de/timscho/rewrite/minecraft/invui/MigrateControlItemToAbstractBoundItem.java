@@ -175,7 +175,7 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
                         .apply(this.updateCursor(c), c.getBody().getCoordinates().lastStatement());
                 }
 
-                if (!hasBridgeGetGuiSource && !this.hasMethod(c, "getGui", 0) && !TypeUtils.isOfClassType(guiType, MigrateControlItemToAbstractBoundItem.GUI)) {
+                if (!hasBridgeGetGuiSource && !this.hasNoArgMethod(c, "getGui") && !TypeUtils.isOfClassType(guiType, MigrateControlItemToAbstractBoundItem.GUI)) {
                     final String guiTypePattern = this.typePattern(guiType);
                     c = JavaTemplate.builder(
                             "@Override public " + guiTypePattern + " getGui() { return (" + guiTypePattern + ") super.getGui(); }")
@@ -218,12 +218,12 @@ public class MigrateControlItemToAbstractBoundItem extends Recipe {
                     .withPrefix(method.getPrefix().withWhitespace("\n\n    "));
             }
 
-            private boolean hasMethod(final J.ClassDeclaration classDecl, final String methodName, final int paramCount) {
+            private boolean hasNoArgMethod(final J.ClassDeclaration classDecl, final String methodName) {
                 final List<Statement> statements = classDecl.getBody().getStatements();
                 for (final Statement statement : statements) {
                     if (statement instanceof final J.MethodDeclaration methodDeclaration &&
                         methodDeclaration.getSimpleName().equals(methodName) &&
-                        methodDeclaration.getParameters().size() == paramCount) {
+                        ArgumentLists.isEmpty(methodDeclaration.getParameters())) {
                         return true;
                     }
                 }
