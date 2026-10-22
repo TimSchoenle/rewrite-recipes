@@ -95,7 +95,7 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
                 if (c.getKind() == J.ClassDeclaration.Kind.Type.Interface || c.getKind() == J.ClassDeclaration.Kind.Type.Annotation) {
                     return c;
                 }
-                if (!this.hasMethod(c, "getItemProvider", 0) || this.hasMethodWithParamType(c, "getItemProvider", MigrateItemGetItemProviderToPlayerApi.PLAYER)) {
+                if (!this.hasNoArgMethod(c, "getItemProvider") || this.hasMethodWithParamType(c, "getItemProvider", MigrateItemGetItemProviderToPlayerApi.PLAYER)) {
                     return c;
                 }
 
@@ -115,7 +115,7 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
                     return true;
                 }
 
-                if (!"getItemProvider".equals(method.getSimpleName()) || !method.getArguments().isEmpty()) {
+                if (!"getItemProvider".equals(method.getSimpleName()) || !ArgumentLists.isEmpty(method.getArguments())) {
                     return false;
                 }
 
@@ -129,7 +129,7 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
             }
 
             private boolean isLegacyNoArgGetItemProviderMethod(final J.MethodDeclaration method) {
-                if (!"getItemProvider".equals(method.getSimpleName()) || !method.getParameters().isEmpty()) {
+                if (!"getItemProvider".equals(method.getSimpleName()) || !ArgumentLists.isEmpty(method.getParameters())) {
                     return false;
                 }
 
@@ -153,11 +153,11 @@ public class MigrateItemGetItemProviderToPlayerApi extends Recipe {
                     this.parameterHasType(enclosingMethod.getParameters().getFirst(), MigrateItemGetItemProviderToPlayerApi.PLAYER);
             }
 
-            private boolean hasMethod(final J.ClassDeclaration classDecl, final String methodName, final int paramCount) {
+            private boolean hasNoArgMethod(final J.ClassDeclaration classDecl, final String methodName) {
                 for (final Statement statement : classDecl.getBody().getStatements()) {
                     if (statement instanceof final J.MethodDeclaration methodDeclaration &&
                         methodName.equals(methodDeclaration.getSimpleName()) &&
-                        methodDeclaration.getParameters().size() == paramCount) {
+                        ArgumentLists.isEmpty(methodDeclaration.getParameters())) {
                         return true;
                     }
                 }

@@ -371,6 +371,34 @@ class MigrateSimpleItemToItemTest implements RewriteTest {
     }
 
     @Test
+    void leavesNoArgConstructorUnchanged() {
+        this.rewriteRun(
+            java(
+                """
+                package xyz.xenondevs.invui.item.impl;
+
+                public class SimpleItem {
+                    public SimpleItem() {}
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import xyz.xenondevs.invui.item.impl.SimpleItem;
+
+                class UsesSimpleItem {
+                    Object build() {
+                        return new SimpleItem();
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
     void doesNotChangeSourceWithoutInvUiReferences() {
         this.rewriteRun(
             java(

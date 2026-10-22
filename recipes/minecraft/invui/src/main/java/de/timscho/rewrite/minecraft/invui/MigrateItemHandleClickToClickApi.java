@@ -165,7 +165,7 @@ public class MigrateItemHandleClickToClickApi extends Recipe {
             }
 
             private J.MethodInvocation migrateLegacyHandleClickEventAccessors(final J.MethodInvocation method) {
-                if (method.getSelect() == null || !method.getArguments().isEmpty() || !(method.getSelect() instanceof final J.Identifier selectIdentifier)) {
+                if (method.getSelect() == null || !ArgumentLists.isEmpty(method.getArguments()) || !(method.getSelect() instanceof final J.Identifier selectIdentifier)) {
                     return method;
                 }
 

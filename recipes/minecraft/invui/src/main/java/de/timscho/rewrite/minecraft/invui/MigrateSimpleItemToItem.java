@@ -49,7 +49,7 @@ public class MigrateSimpleItemToItem extends Recipe {
                 final J nc = super.visitNewClass(newClass, ctx);
                 if (!(nc instanceof final J.NewClass n)
                     || n.getClazz() == null
-                    || n.getArguments().isEmpty()
+                    || ArgumentLists.isEmpty(n.getArguments())
                     || n.getArguments().size() > 2) {
                     return nc;
                 }

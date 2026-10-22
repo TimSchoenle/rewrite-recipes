@@ -138,6 +138,120 @@ class MigrateItemHandleClickToClickApiTest implements RewriteTest {
     }
 
     @Test
+    void renamesEventAccessorsInsideItemHandleClick() {
+        this.rewriteRun(
+            java(
+                """
+                package org.bukkit.entity;
+
+                public class Player {}
+                """
+            ),
+            java(
+                """
+                package org.bukkit.event.inventory;
+
+                public enum ClickType { LEFT }
+                """
+            ),
+            java(
+                """
+                package org.bukkit.event.inventory;
+
+                import org.bukkit.entity.Player;
+
+                public class InventoryClickEvent {
+                    public Player getWhoClicked() { return null; }
+                    public ClickType getClick() { return null; }
+                    public int getHotbarButton() { return -1; }
+                }
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui;
+
+                import org.bukkit.entity.Player;
+                import org.bukkit.event.inventory.ClickType;
+
+                public class Click {
+                    public Player player() { return null; }
+                    public ClickType clickType() { return null; }
+                    public int hotbarButton() { return -1; }
+                }
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                import org.bukkit.entity.Player;
+                import org.bukkit.event.inventory.ClickType;
+                import org.bukkit.event.inventory.InventoryClickEvent;
+
+                public interface Item {
+                    void handleClick(ClickType clickType, Player player, InventoryClickEvent event);
+                }
+                """,
+                """
+                package xyz.xenondevs.invui.item;
+
+                import org.bukkit.entity.Player;
+                import org.bukkit.event.inventory.ClickType;
+                import xyz.xenondevs.invui.Click;
+
+                public interface Item {
+                    void handleClick(ClickType clickType, Player player, Click event);
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import org.bukkit.entity.Player;
+                import org.bukkit.event.inventory.ClickType;
+                import org.bukkit.event.inventory.InventoryClickEvent;
+                import xyz.xenondevs.invui.item.Item;
+
+                class ItemImpl implements Item {
+                    InventoryClickEvent lastEvent;
+
+                    @Override
+                    public void handleClick(ClickType clickType, Player player, InventoryClickEvent event) {
+                        Player who = event.getWhoClicked();
+                        ClickType type = event.getClick();
+                        int button = event.getHotbarButton();
+                        Player previous = lastEvent.getWhoClicked();
+                    }
+                }
+                """,
+                """
+                package test;
+
+                import org.bukkit.entity.Player;
+                import org.bukkit.event.inventory.ClickType;
+                import org.bukkit.event.inventory.InventoryClickEvent;
+                import xyz.xenondevs.invui.Click;
+                import xyz.xenondevs.invui.item.Item;
+
+                class ItemImpl implements Item {
+                    InventoryClickEvent lastEvent;
+
+                    @Override
+                    public void handleClick(ClickType clickType, Player player, Click event) {
+                        Player who = event.player();
+                        ClickType type = event.clickType();
+                        int button = event.hotbarButton();
+                        Player previous = lastEvent.getWhoClicked();
+                    }
+                }
+                """
+            )
+        );
+    }
+
+    @Test
     void doesNotMigrateUnrelatedInventoryClickEventUsage() {
         this.rewriteRun(
             java(
