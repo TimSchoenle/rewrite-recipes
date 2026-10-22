@@ -295,4 +295,43 @@ class MigrateItemGetItemProviderToPlayerApiTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void doesNotBridgeClassWithUnresolvedSupertypeInFileUsingItem() {
+        this.rewriteRun(
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                public interface ItemProvider {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                public interface Item {
+                    default ItemProvider getItemProvider() {
+                        return null;
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import xyz.xenondevs.invui.item.Item;
+
+                class Settings extends UnknownBase {
+                    Item item;
+
+                    Object getItemProvider() {
+                        return null;
+                    }
+                }
+                """
+            )
+        );
+    }
 }

@@ -306,4 +306,46 @@ class MigrateStatelessItemProviderToItemWrapperTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void doesNotMigrateUnresolvedItemProviderWithoutInvUiImport() {
+        this.rewriteRun(
+            java(
+                """
+                package org.bukkit.inventory;
+
+                public class ItemStack {}
+                """
+            ),
+            java(
+                """
+                package xyz.xenondevs.invui.item;
+
+                import org.bukkit.inventory.ItemStack;
+
+                public interface ItemProvider {
+                    ItemStack get(String lang);
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                class UsesUnresolvedProvider {
+                    xyz.xenondevs.invui.item.ItemProvider invui;
+
+                    Object create(Object stack) {
+                        return new ItemProvider() {
+                            @Override
+                            public Object get(String lang) {
+                                return stack;
+                            }
+                        };
+                    }
+                }
+                """
+            )
+        );
+    }
 }

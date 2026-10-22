@@ -100,7 +100,8 @@ public class MigrateStatelessItemProviderToItemWrapper extends Recipe {
             }
 
             // The printed source is consulted only when the type is unresolved; a resolved type that is not
-            // the InvUI ItemProvider is a lookalike, such as a local interface of the same simple name.
+            // the InvUI ItemProvider is a lookalike, such as a local interface of the same simple name. An
+            // unresolved simple name counts only when an explicit import binds it to the InvUI type.
             private boolean isItemProviderAnonymousClass(final J.NewClass newClass) {
                 final JavaType type = newClass.getType();
                 if (type != null && !(type instanceof JavaType.Unknown)) {
@@ -108,8 +109,13 @@ public class MigrateStatelessItemProviderToItemWrapper extends Recipe {
                 }
 
                 final String newClassSource = newClass.printTrimmed(this.getCursor());
-                return newClassSource.startsWith("new ItemProvider(") ||
-                    newClassSource.startsWith("new xyz.xenondevs.invui.item.ItemProvider(");
+                if (newClassSource.startsWith("new xyz.xenondevs.invui.item.ItemProvider(")) {
+                    return true;
+                }
+                return newClassSource.startsWith("new ItemProvider(") && ExplicitImports.importsType(
+                    this.getCursor().firstEnclosingOrThrow(J.CompilationUnit.class),
+                    MigrateStatelessItemProviderToItemWrapper.ITEM_PROVIDER
+                );
             }
 
             private boolean usesParameter(final Expression expression, final String parameterName) {
