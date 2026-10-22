@@ -70,4 +70,25 @@ class RemoveAdventureComponentWrapperTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void doesNotChangeSourceWithoutInvUiReferences() {
+        this.rewriteRun(
+            java(
+                """
+                package test;
+
+                class AdventureComponentWrapper {
+                    AdventureComponentWrapper(Object component) {}
+                }
+
+                class UsesWrapper {
+                    Object use(Object component) {
+                        return new AdventureComponentWrapper(component);
+                    }
+                }
+                """
+            )
+        );
+    }
 }

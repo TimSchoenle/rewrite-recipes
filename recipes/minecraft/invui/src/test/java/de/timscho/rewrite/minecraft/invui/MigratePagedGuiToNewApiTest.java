@@ -65,4 +65,30 @@ class MigratePagedGuiToNewApiTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void doesNotChangeSourceWithoutInvUiReferences() {
+        this.rewriteRun(
+            java(
+                """
+                package test;
+
+                class PagedGui {
+                    static PagedGui items() { return new PagedGui(); }
+                    int getPageAmount() { return 0; }
+                    int getCurrentPage() { return 0; }
+                    void goForward() {}
+                }
+
+                class UsesPagedGui {
+                    int use() {
+                        PagedGui gui = PagedGui.items();
+                        gui.goForward();
+                        return gui.getPageAmount() + gui.getCurrentPage();
+                    }
+                }
+                """
+            )
+        );
+    }
 }

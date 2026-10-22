@@ -625,4 +625,28 @@ class MigrateControlItemToAbstractBoundItemTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void doesNotChangeSourceWithoutInvUiReferences() {
+        this.rewriteRun(
+            spec -> spec.expectedCyclesThatMakeChanges(0),
+            java(
+                """
+                package test;
+
+                class Panel<G> {
+                    void setGui(G gui) {}
+                    Object getItemProvider(G gui) { return null; }
+                }
+
+                class UsesPanel {
+                    void use(Panel<String> panel) {
+                        panel.setGui("gui");
+                        panel.getItemProvider("gui");
+                    }
+                }
+                """
+            )
+        );
+    }
 }

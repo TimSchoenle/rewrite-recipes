@@ -150,4 +150,34 @@ class RemoveSimpleItemWrapperTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void doesNotChangeSourceWithoutInvUiReferences() {
+        this.rewriteRun(
+            java(
+                """
+                package org.bukkit.inventory;
+
+                public class ItemStack {}
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import org.bukkit.inventory.ItemStack;
+
+                class SimpleItem {
+                    SimpleItem(ItemStack itemStack) {}
+                }
+
+                class UsesSimpleItem {
+                    Object use(ItemStack itemStack) {
+                        return new SimpleItem(itemStack);
+                    }
+                }
+                """
+            )
+        );
+    }
 }

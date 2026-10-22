@@ -155,4 +155,25 @@ class MigrateItemProviderStringGetToLocaleApiTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void doesNotChangeSourceWithoutInvUiReferences() {
+        this.rewriteRun(
+            java(
+                """
+                package test;
+
+                class Translations {
+                    String get(String lang) { return lang; }
+                }
+
+                class UsesTranslations {
+                    String use(Translations translations) {
+                        return translations.get("en");
+                    }
+                }
+                """
+            )
+        );
+    }
 }

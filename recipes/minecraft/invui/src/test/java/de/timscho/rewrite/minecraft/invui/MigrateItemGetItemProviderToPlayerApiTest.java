@@ -137,4 +137,25 @@ class MigrateItemGetItemProviderToPlayerApiTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void doesNotBridgeGetItemProviderOutsideInvUi() {
+        this.rewriteRun(
+            java(
+                """
+                package test;
+
+                class Settings {
+                    Object getItemProvider() { return null; }
+                }
+
+                class UsesSettings {
+                    Object use(Settings settings) {
+                        return settings.getItemProvider();
+                    }
+                }
+                """
+            )
+        );
+    }
 }

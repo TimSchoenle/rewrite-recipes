@@ -322,4 +322,58 @@ class MigrateWindowToNewApiTest implements RewriteTest {
             )
         );
     }
+
+    @Test
+    void migratesSetGuiOnBuilderObtainedFromAnotherClass() {
+        this.rewriteRun(
+            java(
+                """
+                package xyz.xenondevs.invui.window;
+
+                public interface Window {
+                    interface Builder<W extends Window, S extends Builder<W, S>> {
+                        S setGui(Object gui);
+                        S setUpperGui(Object gui);
+                        interface Normal<V, S extends Normal<V, S>> extends Builder<Window, S> {
+                            interface Split extends Normal<Object, Split> {}
+                        }
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                import xyz.xenondevs.invui.window.Window;
+
+                class Windows {
+                    static Window.Builder.Normal.Split create() {
+                        return null;
+                    }
+                }
+                """
+            ),
+            java(
+                """
+                package test;
+
+                class UsesWindows {
+                    void use() {
+                        Windows.create().setGui(new Object());
+                    }
+                }
+                """,
+                """
+                package test;
+
+                class UsesWindows {
+                    void use() {
+                        Windows.create().setUpperGui(new Object());
+                    }
+                }
+                """
+            )
+        );
+    }
 }
