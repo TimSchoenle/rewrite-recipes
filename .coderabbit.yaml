@@ -1,0 +1,96 @@
+# yaml-language-server: $schema=https://storage.googleapis.com/coderabbit_public_assets/schema.v2.json
+tone_instructions: "Direct, no filler, no praise."
+
+reviews:
+  profile: assertive
+
+  auto_review:
+    # CodeRabbit cannot filter by head branch, so automated pull requests are
+    # skipped by author: Renovate opens `renovate/*`, the release manager app
+    # opens `release-please--*`. Both the bot login and the bare app slug are
+    # listed because the match is exact.
+    ignore_usernames:
+      - "renovate[bot]"
+      - "renovate"
+      - "automatic-release-manager[bot]"
+      - "automatic-release-manager"
+
+  # Generated or tool-owned files. Review their sources instead.
+  path_filters:
+    - "!gradle/wrapper/gradle-wrapper.jar"
+    - "!gradlew"
+    - "!gradlew.bat"
+    - "!**/build/**"
+    - "!**/CHANGELOG.md"
+    - "!.release-please-manifest.json"
+    - "!README.md" # rendered from .github/templates/README.md.hbs
+
+  path_instructions:
+    - path: "recipes/**/src/main/java/**/*.java"
+      instructions: |
+        Imperative OpenRewrite recipes, published to Maven Central and run against third-party code
+        bases. Flag:
+        - Idempotence: a second cycle must make no change; visitors must not re-match their own output.
+        - Missing `Preconditions.check(new UsesType<>(...)/new UsesMethod<>(...), visitor)` so the visitor
+          skips sources that cannot match.
+        - Type-attribution assumptions: matchers (`MethodMatcher`, `TypeUtils`) must handle missing or
+          partial type information without NPEs or wrong rewrites; `JavaTemplate` needs correct imports,
+          `contextSensitive()` only when required, and `maybeAddImport`/`maybeRemoveImport` for touched types.
+        - LST handling: no in-place mutation, `withX` copies, formatting and comments preserved, markers
+          (`SearchResult`, `TODO` comments) used for manual follow-ups instead of silent semantic changes.
+        - `getDisplayName`/`getDescription` follow OpenRewrite conventions (description ends with a period);
+          `@Option` fields are immutable and included in `equals`/`hashCode`.
+        - Recipe class names and fully qualified names are public API referenced from YAML and docs:
+          renames are breaking changes.
+        Prefer plain loops over the Stream API. Lombok is not a dependency here; do not suggest it.
+    - path: "recipes/**/src/test/java/**/*.java"
+      instructions: |
+        `RewriteTest` specs. Every recipe needs before/after cases plus no-change cases for near misses and
+        sources without the target types. Type stubs must declare the APIs being matched so tests do not
+        pass on missing type attribution. Do not disable the default second-cycle idempotence check
+        without a stated reason.
+    - path: "catalog/src/main/resources/META-INF/rewrite/**"
+      instructions: |
+        Declarative recipes forming the published catalog; `de.timscho.rewrite.Style` is consumed by other
+        repositories' builds. Check that every referenced recipe name exists on the catalog's runtime
+        classpath at the BOM version, ordering dependencies inside `recipeList`, that type and method
+        patterns are fully qualified and correct, and that renames or removals of recipe names are
+        treated as breaking changes. Commented-out recipes need a reason.
+    - path: "docs/RECIPES.md"
+      instructions: |
+        Must list every recipe name the repository publishes, matching the YAML and Java recipe names exactly.
+    - path: "{buildSrc/**,**/*.gradle.kts}"
+      instructions: |
+        Convention plugins and module builds. Flag eager task configuration, configuration-cache
+        incompatible constructs, and changes to the doclint gate, Java release level, published
+        coordinates, POM or signing.
+    - path: ".github/{workflows,actions}/**"
+      instructions: |
+        Every third-party action must be pinned to a full commit SHA with a version comment.
+        Require least-privilege `permissions:` at workflow or job level, `persist-credentials: false`
+        on checkout unless pushing, no untrusted `${{ github.event.* }}` interpolation into `run:`,
+        and no `pull_request_target` that checks out or executes PR code.
+    - path: ".github/templates/**"
+      instructions: |
+        Source of the generated README.md. Review rendered wording, links and badge URLs here.
+
+  pre_merge_checks:
+    title:
+      mode: error
+      requirements: |
+        Must follow Conventional Commits: `type(scope)?!?: subject`. Allowed types: feat, fix, perf,
+        revert, docs, refactor, test, style, ci, build, chore, deps. Lowercase, imperative subject,
+        no trailing period. release-please derives version bumps and the changelog from this title.
+
+  tools:
+    # CI only runs javac doclint and CodeQL; no Checkstyle, Spotless or PMD is applied to the modules.
+    pmd:
+      enabled: true
+    actionlint:
+      enabled: true
+    zizmor:
+      enabled: true
+    gitleaks:
+      enabled: true
+    markdownlint:
+      enabled: true
