@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.3](https://github.com/TimSchoenle/rewrite-recipes/compare/v0.2.2...v0.2.3) (2026-10-22)
+
+
+### Bug Fixes
+
+* **invui:** make no-arg detection work and scope rewrites to the InvUI hierarchy ([#216](https://github.com/TimSchoenle/rewrite-recipes/issues/216)) ([6f90b58](https://github.com/TimSchoenle/rewrite-recipes/commit/6f90b587b0c11ceb55d00cc4930e69d6ab5e9b93))
+
+
+### Performance Improvements
+
+* **invui:** gate recipe visitors with UsesType/UsesMethod preconditions ([#213](https://github.com/TimSchoenle/rewrite-recipes/issues/213)) ([1bb5b1f](https://github.com/TimSchoenle/rewrite-recipes/commit/1bb5b1fb04ce418f60334279dc81aacfe14e3a2b))
+
 ## [0.2.2](https://github.com/TimSchoenle/rewrite-recipes/compare/v0.2.1...v0.2.2) (2026-08-31)
 
 
