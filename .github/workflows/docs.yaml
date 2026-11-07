@@ -60,10 +60,19 @@ jobs:
           variables: ${{ steps.variables.outputs.variables }}
 
       - name: Upload the README patch
+        id: patch
         uses: TimSchoenle/actions/actions/common/create-patch@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-create-patch-v1.1.1
         with:
           artifact_name: readme-patch
           paths: README.md
+
+      # The patch is committed by docs-commit.yaml after this run has finished. While it is
+      # non-empty this head is not the one to merge: the run on the bot commit decides.
+      - name: Fail while the patch is uncommitted
+        if: steps.patch.outputs.has_changes == 'true'
+        run: |
+          echo "::error::README.md changed; docs-commit.yaml commits them and the run on that commit decides. If no bot commit appears, regenerate them locally and push."
+          exit 1
 
   # The drift gate. A README.md that does not match its template fails here instead of merging.
   readme:
