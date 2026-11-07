@@ -15,7 +15,7 @@ jobs:
   release-please:
     name: Release Please
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     environment: publish
     outputs:
       catalog_release_created: ${{ steps.release.outputs['catalog--release_created'] }}
