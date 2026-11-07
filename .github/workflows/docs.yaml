@@ -13,41 +13,28 @@ concurrency:
 permissions: {}
 
 jobs:
-  # Renders README.md from its template and commits the result back to the pull request. A render
-  # that changes nothing produces no commit, so an unrelated pull request is not touched.
+  # Renders README.md from its template and uploads the change as a patch. It holds no secret: a
+  # pull_request run executes the pull request's own copy of this file, so anything here is the
+  # author's to read. `Docs Commit` commits the patch from the default branch's copy of its workflow.
   render:
     name: Render
-    # The app's secrets belong in the ci environment.
-    environment:
-      name: ci
-      deployment: false
-    # A fork's branch cannot be committed to, and the App token is not issued to a fork's pull
-    # request. Those go through `readme` below, which only reads.
+    # A fork's branch cannot be committed to. Those go through `readme` below, which only reads.
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: read # to fetch code; the commit is made through the App token below
+      contents: read # to fetch code
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
-      - name: Generate Bot Token
-        id: generate_token
-        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
-        with:
-          client-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
-          private-key: ${{ secrets.ACTIONS_MAINTENANCE_PRIVATE_KEY }}
-          # Narrowed to the one permission the render commit needs. An unscoped token inherits every
-          # permission the installation holds, which jactionlint's `github-app` rule reports as an error.
-          permission-contents: write
-
+      # The pull request head, not the merge commit: the patch has to apply to the branch.
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Generate the licence payload
@@ -65,14 +52,18 @@ jobs:
           branch: ${{ github.event.repository.default_branch }}
           extra: ${{ steps.config.outputs.json }}
 
-      - name: Render and commit the README
-        uses: TimSchoenle/actions/actions/common/render-template-and-commit@ea4465fbe2bec98efad19b63849f8d1ac67b5c88 # tag=actions-common-render-template-and-commit-v1.1.18
+      - name: Render the README
+        uses: TimSchoenle/actions/actions/common/render-template@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-render-template-v3.0.1
         with:
           template: .github/templates/README.md.hbs
           output: README.md
           variables: ${{ steps.variables.outputs.variables }}
-          token: ${{ steps.generate_token.outputs.token }}
-          commit_message: 'docs: render README from its template'
+
+      - name: Upload the README patch
+        uses: TimSchoenle/actions/actions/common/create-patch@dc5b395636dc1954383f11af4062a08814e9b15a # tag=actions-common-create-patch-v1.1.1
+        with:
+          artifact_name: readme-patch
+          paths: README.md
 
   # The drift gate. A README.md that does not match its template fails here instead of merging.
   readme:
