@@ -1,0 +1,70 @@
+name: Docs Commit
+
+# Commits what `Docs` generated on a pull request. A pull_request run executes the pull request's
+# own copy of its workflow, so the job holding the maintenance App's key cannot run there. This
+# workflow_run job runs the copy on the default branch, which a pull request cannot change, and only
+# reads the patch the pull_request run uploaded; commit-patch refuses anything outside allowed_paths.
+on:
+  workflow_run:
+    workflows: ['Docs']
+    types: [completed]
+
+# One commit job per pull request branch. A newer run's patch supersedes an older one, which
+# commit-patch would skip as branch_moved anyway.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  commit:
+    name: Commit
+    # A successful pull_request run from a branch of this repository. A fork's branch cannot be
+    # committed to, and the App may push to no protected branch, the default one included.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.head_branch != github.event.repository.default_branch
+    # The app's secrets belong in the ci environment, which only the default branch may use.
+    environment:
+      name: ci
+      deployment: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read # to download the patch from the pull_request run
+      contents: read # to fetch code; the commit is made through the App token below
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      # For git's objects only: commit-patch applies the patch on top of this commit and executes
+      # nothing from it.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Generate Bot Token
+        id: generate_token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
+          private-key: ${{ secrets.ACTIONS_MAINTENANCE_PRIVATE_KEY }}
+          permission-contents: write
+
+      - name: Commit the README
+        uses: TimSchoenle/actions/actions/common/commit-patch@95d5504ec41c354a35ce0414234107a8eaf921b9 # tag=actions-common-commit-patch-v1.2.0
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
+          run_id: ${{ github.event.workflow_run.id }}
+          artifact_name: readme-patch
+          allowed_paths: 'README.md'
+          commit_message: 'docs: render README from its template'
+          branch: ${{ github.event.workflow_run.head_branch }}
+          expected_head_sha: ${{ github.event.workflow_run.head_sha }}
