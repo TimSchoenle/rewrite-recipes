@@ -1,0 +1,85 @@
+name: Generate
+
+# Every file a tool writes rather than a person. Each generator job runs on the pull request's head
+# and uploads a patch; the Generated Files job is the required check and fails while a patch is not
+# committed yet or a generator failed. generate-commit.yaml, a workflow_run workflow the pull request
+# cannot edit, commits the merged patch to the branch, and the run on that commit decides.
+#
+# No `paths` filter: the Generated Files check has to report on every pull request to be required.
+
+on:
+  pull_request:
+    branches: [ '**' ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  # Renders README.md from its template and uploads the change as a patch. It holds no secret: a
+  # pull_request run executes the pull request's own copy of this file.
+  readme:
+    name: Render README
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read # to fetch code
+    outputs:
+      has_changes: ${{ steps.readme.outputs.has_changes }}
+      artifact_name: ${{ steps.readme.outputs.artifact_name }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      # The pull request head, not the merge commit: the patch has to apply to the branch.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      # The same payload as the `README` job in docs.yaml; any difference would pass a stale file.
+      - name: Generate the licence payload
+        id: config
+        run: |
+          set -euo pipefail
+          license="$(sed -n 's/^license=//p' gradle.properties | head -n 1)"
+          json="$(jq -nc --arg license "$license" '{ repo: { license: $license } }')"
+          echo "json=${json}" >> "$GITHUB_OUTPUT"
+
+      - name: Render the README
+        id: readme
+        uses: TimSchoenle/actions/actions/common/render-readme@be7a69175612d9de514acc14bf55dda8e7ad2e57 # tag=actions-common-render-readme-v1.1.0
+        with:
+          extra: ${{ steps.config.outputs.json }}
+          artifact_name: readme-patch
+
+  # The required check. It needs every generator above and runs whatever their result, so it
+  # reports on every pull request.
+  verdict:
+    name: Generated Files
+    needs: [ readme ]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read # to check out the commit the merged patch is made from
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            github.com:443
+            api.github.com:443
+            *.actions.githubusercontent.com:443
+            *.blob.core.windows.net:443
+
+      - name: Generated Files Verdict
+        uses: TimSchoenle/actions/actions/common/generated-files-verdict@927daf80ad493b627b7384abf496d83abbac5f43 # tag=actions-common-generated-files-verdict-v1.2.0
+        with:
+          needs: ${{ toJSON(needs) }}
